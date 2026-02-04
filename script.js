@@ -287,7 +287,7 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // Slide final
+    // Slide "Por siempre en nuestros corazones"
     html += `
         <div class="slide final-slide" data-slide="${slideIndex}" data-type="final">
             <div class="final-portrait">
@@ -302,8 +302,33 @@ function generateSlides() {
             <div class="final-flowers">🌹</div>
         </div>
     `;
+    slideIndex++;
+
+    // Slide de galería - último slide
+    let galleryPhotosHtml = allPhotos.map((src, i) => `
+        <div class="gallery-thumb" data-photo-src="${src}" data-photo-index="${i}">
+            <img src="${src}" alt="Recuerdo ${i + 1}" loading="lazy">
+        </div>
+    `).join('');
+
+    html += `
+        <div class="slide gallery-slide" data-slide="${slideIndex}" data-type="gallery">
+            <div class="gallery-header">
+                <div class="gallery-icon">📷</div>
+                <div class="gallery-title">Galería de Recuerdos</div>
+                <div class="gallery-subtitle">${allPhotos.length} momentos especiales</div>
+            </div>
+            <div class="gallery-thumbs-container">
+                <div class="gallery-thumbs">
+                    ${galleryPhotosHtml}
+                </div>
+            </div>
+            <div class="gallery-hint">Toca cualquier foto para verla en grande</div>
+        </div>
+    `;
 
     container.innerHTML = html;
+
     return slideIndex + 1;
 }
 
@@ -475,6 +500,7 @@ function getSlideDuration(slideEl) {
         case 'message': return 20000;
         case 'verse': return 18000;
         case 'final': return 25000;
+        case 'gallery': return 30000; // Más tiempo para la galería
         case 'single': return 12000;
         case 'grid':
             const gridClass = slideEl.querySelector('.photo-grid')?.className || '';
@@ -543,6 +569,11 @@ function animateSlide(index) {
     else if (type === 'single') {
         setTimeout(() => slide.querySelector('.photo-container')?.classList.add('show'), 100);
         setTimeout(() => slide.querySelector('.photo-message')?.classList.add('show'), 1800);
+    }
+    else if (type === 'gallery') {
+        setTimeout(() => slide.querySelector('.gallery-header')?.classList.add('show'), 100);
+        setTimeout(() => slide.querySelector('.gallery-thumbs-container')?.classList.add('show'), 800);
+        setTimeout(() => slide.querySelector('.gallery-hint')?.classList.add('show'), 1500);
     }
 }
 
@@ -622,9 +653,14 @@ function openLightbox(photoSrc) {
     const activeSlide = document.querySelector('.slide.active');
     currentSlidePhotos = [];
 
-    activeSlide.querySelectorAll('[data-photo-src]').forEach(el => {
-        currentSlidePhotos.push(el.dataset.photoSrc);
-    });
+    // Si es el slide de galería, usar todas las fotos
+    if (activeSlide.dataset.type === 'gallery') {
+        currentSlidePhotos = [...allPhotos];
+    } else {
+        activeSlide.querySelectorAll('[data-photo-src]').forEach(el => {
+            currentSlidePhotos.push(el.dataset.photoSrc);
+        });
+    }
 
     // Encontrar índice de la foto clickeada
     currentLightboxIndex = currentSlidePhotos.indexOf(photoSrc);
@@ -679,6 +715,7 @@ document.getElementById('slidesContainer').addEventListener('click', function(e)
     // Buscar si el click fue en una foto o dentro de una foto
     const gridPhoto = e.target.closest('.grid-photo');
     const photoInner = e.target.closest('.photo-inner');
+    const galleryThumb = e.target.closest('.gallery-thumb');
 
     if (gridPhoto) {
         const src = gridPhoto.getAttribute('data-photo-src');
@@ -689,6 +726,13 @@ document.getElementById('slidesContainer').addEventListener('click', function(e)
         }
     } else if (photoInner) {
         const src = photoInner.getAttribute('data-photo-src');
+        if (src) {
+            e.preventDefault();
+            e.stopPropagation();
+            openLightbox(src);
+        }
+    } else if (galleryThumb) {
+        const src = galleryThumb.getAttribute('data-photo-src');
         if (src) {
             e.preventDefault();
             e.stopPropagation();

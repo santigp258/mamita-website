@@ -1044,3 +1044,200 @@ body {
         right: 15px;
     }
 }
+
+/* ==================== BOTÓN VER GALERÍA ==================== */
+.gallery-btn {
+    margin-top: 30px;
+    background: linear-gradient(135deg, var(--rose-dark), var(--mauve));
+    border: none;
+    color: white;
+    padding: 15px 35px;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(139, 112, 130, 0.3);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 1s ease 8s forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.gallery-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(139, 112, 130, 0.4);
+}
+
+.gallery-btn:active {
+    transform: scale(0.98);
+}
+
+/* ==================== SLIDE DE GALERÍA ==================== */
+.gallery-slide {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, transparent 50%);
+    padding: 3% 5%;
+}
+
+.gallery-header {
+    text-align: center;
+    margin-bottom: 20px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 1s ease;
+}
+
+.gallery-header.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.gallery-icon {
+    font-size: clamp(35px, 5vw, 50px);
+    margin-bottom: 10px;
+}
+
+.gallery-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(28px, 5vw, 45px);
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.gallery-subtitle {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(12px, 1.5vw, 14px);
+    color: var(--text-light);
+    letter-spacing: 2px;
+}
+
+.gallery-thumbs-container {
+    width: 100%;
+    max-width: 900px;
+    max-height: 55vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    box-shadow: 0 5px 30px rgba(139, 112, 130, 0.15);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 1s ease;
+}
+
+.gallery-thumbs-container.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Scrollbar personalizado */
+.gallery-thumbs-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.gallery-thumbs-container::-webkit-scrollbar-track {
+    background: rgba(139, 112, 130, 0.1);
+    border-radius: 4px;
+}
+
+.gallery-thumbs-container::-webkit-scrollbar-thumb {
+    background: var(--rose-dark);
+    border-radius: 4px;
+}
+
+.gallery-thumbs {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+}
+
+.gallery-thumb {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px;
+    background: white;
+    padding: 3px;
+    box-shadow: 0 3px 12px rgba(139, 112, 130, 0.15);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    pointer-events: none;
+}
+
+.gallery-thumb:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(139, 112, 130, 0.3);
+    z-index: 2;
+}
+
+.gallery-thumb:hover img {
+    filter: brightness(1.05);
+}
+
+.gallery-thumb:active {
+    transform: scale(0.98);
+}
+
+.gallery-hint {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(11px, 1.3vw, 13px);
+    color: var(--text-light);
+    text-align: center;
+    margin-top: 15px;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: all 1s ease;
+}
+
+.gallery-hint.show {
+    opacity: 0.7;
+}
+
+/* Responsive galería slide */
+@media (max-width: 1024px) {
+    .gallery-thumbs {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .gallery-thumbs {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .gallery-thumbs-container {
+        max-height: 50vh;
+    }
+
+    .gallery-thumb {
+        padding: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-thumbs {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .gallery-thumbs-container {
+        max-height: 45vh;
+        padding: 10px;
+    }
+}
