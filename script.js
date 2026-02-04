@@ -140,6 +140,13 @@ const photoCategories = {
             "assets/slideshow/foto_42.jpeg"
         ],
         message: "Tres generaciones unidas por tu amor"
+    },
+    // Última foto especial
+    ultimaFoto: {
+        photos: [
+            "photos/ultima.jpeg"
+        ],
+        message: "Hasta siempre, mamita querida"
     }
 };
 
@@ -273,6 +280,11 @@ function generateSlides() {
     // SECCIÓN 15: Generaciones - 2 fotos
     addPhotosToGlobal(photoCategories.generaciones.photos);
     html += createGridSlide(photoCategories.generaciones.photos, photoCategories.generaciones.message, slideIndex, 'grid-2');
+    slideIndex++;
+
+    // SECCIÓN 16: Última foto especial
+    addPhotosToGlobal(photoCategories.ultimaFoto.photos);
+    html += createSingleSlide(photoCategories.ultimaFoto.photos[0], photoCategories.ultimaFoto.message, slideIndex);
     slideIndex++;
 
     // Slide del versículo
