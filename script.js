@@ -69,14 +69,14 @@ const photoCategories = {
         ],
         message: "Tu abrazo era el refugio más seguro"
     },
-    // Besos con nieta
-    besosNieta: {
+    // Besos con hija/nieta
+    besosHijosNietos: {
         photos: [
             "assets/slideshow/foto_32.jpeg",
             "assets/slideshow/foto_33.jpeg",
             "assets/slideshow/foto_34.jpeg"
         ],
-        message: "Los besos de abuela quedan grabados en el alma"
+        message: "Tus besos y cariño para hijos y nietos, amor eterno"
     },
     // Sentada en sofá rojo - paz
     momentosPaz: {
@@ -93,11 +93,61 @@ const photoCategories = {
             "assets/slideshow/foto_38.jpeg"
         ],
         message: "Cada celebración era una bendición"
+    },
+    // Reuniones familiares - fotos webp
+    reunionesFamiliares: {
+        photos: [
+            "assets/slideshow/photo_1.webp",
+            "assets/slideshow/photo_2.webp",
+            "assets/slideshow/photo_4.webp",
+            "assets/slideshow/photo_8.webp"
+        ],
+        message: "Reunida con toda la familia, el mejor regalo"
+    },
+    // Familia completa al aire libre
+    familiaCompleta: {
+        photos: [
+            "assets/slideshow/photo_3.webp",
+            "assets/slideshow/photo_7.webp"
+        ],
+        message: "Rodeada de hijos, nietos y toda tu descendencia"
+    },
+    // Con nieto
+    conNieto: {
+        photos: [
+            "assets/slideshow/photo_9.webp"
+        ],
+        message: "El amor de abuela, incondicional y eterno"
+    },
+    // Selfie familiar - cumpleaños
+    selfieFamiliar: {
+        photos: [
+            "assets/slideshow/foto_39.jpeg"
+        ],
+        message: "Toda la familia unida, tu mayor alegría"
+    },
+    // Quinceaños - recuerdo especial
+    quinceanos: {
+        photos: [
+            "assets/slideshow/foto_40.jpeg"
+        ],
+        message: "Presente en cada momento especial de tus nietas"
+    },
+    // Con hijas, nietas y bisnieta
+    generaciones: {
+        photos: [
+            "assets/slideshow/foto_41.jpeg",
+            "assets/slideshow/foto_42.jpeg"
+        ],
+        message: "Tres generaciones unidas por tu amor"
     }
 };
 
 // Foto principal para el slide final
 const mainPhoto = "assets/slideshow/main_photo.webp";
+
+// Array global para almacenar todas las fotos del slideshow (para lightbox)
+let allPhotos = [];
 
 // ==================== GENERACIÓN DINÁMICA DE SLIDES ====================
 function generateSlides() {
@@ -121,15 +171,27 @@ function generateSlides() {
     `;
     slideIndex++;
 
+    // Función helper para agregar fotos al array global
+    function addPhotosToGlobal(photos) {
+        photos.forEach(photo => {
+            if (!allPhotos.includes(photo)) {
+                allPhotos.push(photo);
+            }
+        });
+    }
+
     // SECCIÓN 1: Cumpleaños 50 - Grid de 6 fotos (2x3)
+    addPhotosToGlobal(photoCategories.cumpleanos50.photos);
     html += createGridSlide(photoCategories.cumpleanos50.photos, photoCategories.cumpleanos50.message, slideIndex, 'grid-6');
     slideIndex++;
 
     // SECCIÓN 2: Momentos en familia - Grid de 4 fotos (2x2)
+    addPhotosToGlobal(photoCategories.momentosFamilia.photos);
     html += createGridSlide(photoCategories.momentosFamilia.photos, photoCategories.momentosFamilia.message, slideIndex, 'grid-4');
     slideIndex++;
 
     // SECCIÓN 3: Vida cotidiana - 3 fotos horizontal
+    addPhotosToGlobal(photoCategories.vidaCotidiana.photos);
     html += createGridSlide(photoCategories.vidaCotidiana.photos, photoCategories.vidaCotidiana.message, slideIndex, 'grid-3');
     slideIndex++;
 
@@ -137,9 +199,11 @@ function generateSlides() {
     const diaMadresFirst = photoCategories.diaMadres.photos.slice(0, 6);
     const diaMadresSecond = photoCategories.diaMadres.photos.slice(6);
 
+    addPhotosToGlobal(diaMadresFirst);
     html += createGridSlide(diaMadresFirst, "Día de las Madres - Tu sonrisa lo iluminaba todo", slideIndex, 'grid-6');
     slideIndex++;
 
+    addPhotosToGlobal(diaMadresSecond);
     html += createGridSlide(diaMadresSecond, photoCategories.diaMadres.message, slideIndex, 'grid-6');
     slideIndex++;
 
@@ -157,23 +221,58 @@ function generateSlides() {
     slideIndex++;
 
     // SECCIÓN 5: Momentos tranquilos - 4 fotos
+    addPhotosToGlobal(photoCategories.momentosTranquilos.photos);
     html += createGridSlide(photoCategories.momentosTranquilos.photos, photoCategories.momentosTranquilos.message, slideIndex, 'grid-4');
     slideIndex++;
 
     // SECCIÓN 6: Cumpleaños con hija - 2 fotos lado a lado
+    addPhotosToGlobal(photoCategories.cumpleanosHija.photos);
     html += createGridSlide(photoCategories.cumpleanosHija.photos, photoCategories.cumpleanosHija.message, slideIndex, 'grid-2');
     slideIndex++;
 
-    // SECCIÓN 7: Besos con nieta - 3 fotos
-    html += createGridSlide(photoCategories.besosNieta.photos, photoCategories.besosNieta.message, slideIndex, 'grid-3');
+    // SECCIÓN 7: Besos con hijos/nietos - 3 fotos
+    addPhotosToGlobal(photoCategories.besosHijosNietos.photos);
+    html += createGridSlide(photoCategories.besosHijosNietos.photos, photoCategories.besosHijosNietos.message, slideIndex, 'grid-3');
     slideIndex++;
 
     // SECCIÓN 8: Momento de paz - 1 foto destacada
+    addPhotosToGlobal(photoCategories.momentosPaz.photos);
     html += createSingleSlide(photoCategories.momentosPaz.photos[0], photoCategories.momentosPaz.message, slideIndex);
     slideIndex++;
 
     // SECCIÓN 9: Más celebraciones - 3 fotos
+    addPhotosToGlobal(photoCategories.celebraciones.photos);
     html += createGridSlide(photoCategories.celebraciones.photos, photoCategories.celebraciones.message, slideIndex, 'grid-3');
+    slideIndex++;
+
+    // SECCIÓN 10: Reuniones familiares - 4 fotos webp
+    addPhotosToGlobal(photoCategories.reunionesFamiliares.photos);
+    html += createGridSlide(photoCategories.reunionesFamiliares.photos, photoCategories.reunionesFamiliares.message, slideIndex, 'grid-4');
+    slideIndex++;
+
+    // SECCIÓN 11: Familia completa al aire libre - 2 fotos webp
+    addPhotosToGlobal(photoCategories.familiaCompleta.photos);
+    html += createGridSlide(photoCategories.familiaCompleta.photos, photoCategories.familiaCompleta.message, slideIndex, 'grid-2');
+    slideIndex++;
+
+    // SECCIÓN 12: Con nieto - 1 foto destacada webp
+    addPhotosToGlobal(photoCategories.conNieto.photos);
+    html += createSingleSlide(photoCategories.conNieto.photos[0], photoCategories.conNieto.message, slideIndex);
+    slideIndex++;
+
+    // SECCIÓN 13: Selfie familiar - 1 foto destacada
+    addPhotosToGlobal(photoCategories.selfieFamiliar.photos);
+    html += createSingleSlide(photoCategories.selfieFamiliar.photos[0], photoCategories.selfieFamiliar.message, slideIndex);
+    slideIndex++;
+
+    // SECCIÓN 14: Quinceaños - 1 foto especial
+    addPhotosToGlobal(photoCategories.quinceanos.photos);
+    html += createSingleSlide(photoCategories.quinceanos.photos[0], photoCategories.quinceanos.message, slideIndex);
+    slideIndex++;
+
+    // SECCIÓN 15: Generaciones - 2 fotos
+    addPhotosToGlobal(photoCategories.generaciones.photos);
+    html += createGridSlide(photoCategories.generaciones.photos, photoCategories.generaciones.message, slideIndex, 'grid-2');
     slideIndex++;
 
     // Slide del versículo
@@ -210,7 +309,7 @@ function generateSlides() {
 
 function createGridSlide(photos, message, index, gridType) {
     let photosHtml = photos.map((src, i) => `
-        <div class="grid-photo" style="--delay: ${i * 0.15}s">
+        <div class="grid-photo" style="--delay: ${i * 0.15}s" data-photo-src="${src}">
             <img src="${src}" alt="Recuerdo ${i + 1}">
         </div>
     `).join('');
@@ -230,7 +329,7 @@ function createSingleSlide(src, message, index) {
         <div class="slide photo-slide single-slide" data-slide="${index}" data-type="single">
             <div class="photo-wrapper">
                 <div class="photo-container">
-                    <div class="photo-frame"><div class="photo-inner">
+                    <div class="photo-frame"><div class="photo-inner" data-photo-src="${src}">
                         <img src="${src}" alt="Recuerdo">
                     </div></div>
                 </div>
@@ -238,6 +337,31 @@ function createSingleSlide(src, message, index) {
             </div>
         </div>
     `;
+}
+
+// ==================== PANTALLA DE INICIO ====================
+function createAutoplayOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'autoplay-overlay';
+    overlay.id = 'autoplayOverlay';
+    overlay.innerHTML = `
+        <div class="autoplay-content">
+            <div class="autoplay-dove">🕊️</div>
+            <div class="autoplay-title">En Memoria de Ana del Carmen</div>
+            <div class="autoplay-subtitle">1956 — 2026</div>
+            <button class="autoplay-btn" id="autoplayBtn">▶ Comenzar</button>
+            <div class="autoplay-hint">Presiona para iniciar el memorial con música</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('autoplayBtn').addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        setTimeout(() => {
+            overlay.remove();
+            startSlideshow();
+        }, 800);
+    });
 }
 
 // ==================== FLOATING ELEMENTS ====================
@@ -312,22 +436,38 @@ setInterval(createBokeh, 800);
 // ==================== SLIDESHOW ====================
 const totalSlides = generateSlides();
 const slides = document.querySelectorAll('.slide');
+const progressBar = document.getElementById('progressBar');
 const progressFill = document.getElementById('progressFill');
+const progressTooltip = document.getElementById('progressTooltip');
 const currentSlideEl = document.getElementById('currentSlide');
 const totalSlidesEl = document.getElementById('totalSlides');
 const playBtn = document.getElementById('playBtn');
 const hideBtn = document.getElementById('hideBtn');
 const controlsPanel = document.getElementById('controlsPanel');
+const showControlsBtn = document.getElementById('showControlsBtn');
 const bgMusic = document.getElementById('bgMusic');
 const muteBtn = document.getElementById('muteBtn');
+
+// Lightbox elements
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+const lightboxCounter = document.getElementById('lightboxCounter');
 
 totalSlidesEl.textContent = totalSlides;
 
 let currentSlide = 0;
 let isPlaying = false;
 let slideTimer = null;
+let audioTimeOnPause = 0; // Para sincronizar audio
 
-// Duraciones por tipo de slide
+// Lightbox state
+let currentLightboxIndex = 0;
+let currentSlidePhotos = [];
+
+// ==================== DURACIONES ====================
 function getSlideDuration(slideEl) {
     const type = slideEl.dataset.type;
     switch(type) {
@@ -337,7 +477,6 @@ function getSlideDuration(slideEl) {
         case 'final': return 25000;
         case 'single': return 12000;
         case 'grid':
-            // Más tiempo para grids con más fotos
             const gridClass = slideEl.querySelector('.photo-grid')?.className || '';
             if (gridClass.includes('grid-6')) return 18000;
             if (gridClass.includes('grid-4')) return 15000;
@@ -348,6 +487,7 @@ function getSlideDuration(slideEl) {
     }
 }
 
+// ==================== SLIDE FUNCTIONS ====================
 function clearAllAnimations() {
     document.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
 }
@@ -393,12 +533,10 @@ function animateSlide(index) {
         setTimeout(() => slide.querySelector('.final-flowers')?.classList.add('show'), 7500);
     }
     else if (type === 'grid') {
-        // Animar cada foto del grid con delay escalonado
         const photos = slide.querySelectorAll('.grid-photo');
         photos.forEach((photo, i) => {
             setTimeout(() => photo.classList.add('show'), 200 + (i * 200));
         });
-        // Mensaje después de que aparezcan las fotos
         const msgDelay = 200 + (photos.length * 200) + 500;
         setTimeout(() => slide.querySelector('.photo-message')?.classList.add('show'), msgDelay);
     }
@@ -423,13 +561,16 @@ function startSlideshow() {
     isPlaying = true;
     playBtn.textContent = '⏸ PAUSAR';
 
-    bgMusic.currentTime = 0;
-    bgMusic.volume = 1;
-    bgMusic.play().catch(e => console.log('Audio:', e));
-
+    // Si es reinicio, comenzar desde 0
     if (currentSlide === totalSlides - 1) {
         currentSlide = 0;
+        audioTimeOnPause = 0;
     }
+
+    // Sincronizar audio - continuar desde donde se pausó
+    bgMusic.currentTime = audioTimeOnPause;
+    bgMusic.volume = 1;
+    bgMusic.play().catch(e => console.log('Audio:', e));
 
     showSlide(currentSlide);
     slideTimer = setTimeout(nextSlide, getSlideDuration(slides[currentSlide]));
@@ -437,36 +578,171 @@ function startSlideshow() {
 
 function pauseSlideshow() {
     isPlaying = false;
-    playBtn.textContent = '▶ REPRODUCIR';
+    playBtn.textContent = '▶ CONTINUAR';
     clearTimeout(slideTimer);
+
+    // Guardar posición del audio para sincronización
+    audioTimeOnPause = bgMusic.currentTime;
     bgMusic.pause();
 }
 
-// Event listeners
+// ==================== PROGRESS BAR INTERACTIVO ====================
+progressBar.addEventListener('click', (e) => {
+    const rect = progressBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const targetSlide = Math.floor(percent * totalSlides);
+
+    // Pausar si está reproduciendo
+    if (isPlaying) {
+        pauseSlideshow();
+    }
+
+    // Navegar al slide
+    currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
+    showSlide(currentSlide);
+});
+
+progressBar.addEventListener('mousemove', (e) => {
+    const rect = progressBar.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const targetSlide = Math.floor(percent * totalSlides) + 1;
+
+    progressTooltip.textContent = `Slide ${Math.max(1, Math.min(targetSlide, totalSlides))}`;
+    progressTooltip.style.left = `${percent * 100}%`;
+});
+
+// ==================== LIGHTBOX ====================
+function openLightbox(photoSrc) {
+    // Pausar slideshow al abrir lightbox
+    if (isPlaying) {
+        pauseSlideshow();
+    }
+
+    // Obtener fotos del slide actual
+    const activeSlide = document.querySelector('.slide.active');
+    currentSlidePhotos = [];
+
+    activeSlide.querySelectorAll('[data-photo-src]').forEach(el => {
+        currentSlidePhotos.push(el.dataset.photoSrc);
+    });
+
+    // Encontrar índice de la foto clickeada
+    currentLightboxIndex = currentSlidePhotos.indexOf(photoSrc);
+    if (currentLightboxIndex === -1) currentLightboxIndex = 0;
+
+    updateLightboxImage();
+    lightbox.classList.add('active');
+}
+
+function closeLightbox() {
+    lightbox.classList.remove('active');
+}
+
+function updateLightboxImage() {
+    lightboxImg.src = currentSlidePhotos[currentLightboxIndex];
+    lightboxCounter.textContent = `${currentLightboxIndex + 1} / ${currentSlidePhotos.length}`;
+
+    // Mostrar/ocultar navegación si solo hay una foto
+    lightboxPrev.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
+    lightboxNext.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
+}
+
+function lightboxPrevPhoto() {
+    currentLightboxIndex = (currentLightboxIndex - 1 + currentSlidePhotos.length) % currentSlidePhotos.length;
+    updateLightboxImage();
+}
+
+function lightboxNextPhoto() {
+    currentLightboxIndex = (currentLightboxIndex + 1) % currentSlidePhotos.length;
+    updateLightboxImage();
+}
+
+// Lightbox event listeners
+lightboxClose.addEventListener('click', closeLightbox);
+lightboxPrev.addEventListener('click', lightboxPrevPhoto);
+lightboxNext.addEventListener('click', lightboxNextPhoto);
+
+lightbox.addEventListener('click', (e) => {
+    // Cerrar solo si se hace click en el fondo oscuro
+    if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
+        closeLightbox();
+    }
+});
+
+// Click en fotos para abrir lightbox - usar event delegation en el container
+document.getElementById('slidesContainer').addEventListener('click', function(e) {
+    // Verificar si el lightbox ya está abierto
+    if (lightbox.classList.contains('active')) {
+        return;
+    }
+
+    // Buscar si el click fue en una foto o dentro de una foto
+    const gridPhoto = e.target.closest('.grid-photo');
+    const photoInner = e.target.closest('.photo-inner');
+
+    if (gridPhoto) {
+        const src = gridPhoto.getAttribute('data-photo-src');
+        if (src) {
+            e.preventDefault();
+            e.stopPropagation();
+            openLightbox(src);
+        }
+    } else if (photoInner) {
+        const src = photoInner.getAttribute('data-photo-src');
+        if (src) {
+            e.preventDefault();
+            e.stopPropagation();
+            openLightbox(src);
+        }
+    }
+});
+
+// ==================== CONTROLES ====================
 playBtn.onclick = () => isPlaying ? pauseSlideshow() : startSlideshow();
-hideBtn.onclick = () => controlsPanel.classList.toggle('hidden');
+
+hideBtn.onclick = () => {
+    controlsPanel.classList.add('hidden');
+    showControlsBtn.classList.add('visible');
+};
+
+showControlsBtn.onclick = () => {
+    controlsPanel.classList.remove('hidden');
+    showControlsBtn.classList.remove('visible');
+};
+
 muteBtn.onclick = () => {
     bgMusic.muted = !bgMusic.muted;
     muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
 };
 
-// Keyboard controls
+// ==================== KEYBOARD CONTROLS ====================
 document.onkeydown = (e) => {
+    // Si el lightbox está abierto
+    if (lightbox.classList.contains('active')) {
+        if (e.code === 'Escape') closeLightbox();
+        if (e.code === 'ArrowLeft') lightboxPrevPhoto();
+        if (e.code === 'ArrowRight') lightboxNextPhoto();
+        return;
+    }
+
     if (e.code === 'Space') {
         e.preventDefault();
         isPlaying ? pauseSlideshow() : startSlideshow();
     }
     if (e.code === 'ArrowRight') {
-        pauseSlideshow();
+        if (isPlaying) pauseSlideshow();
         currentSlide = Math.min(currentSlide + 1, totalSlides - 1);
         showSlide(currentSlide);
     }
     if (e.code === 'ArrowLeft') {
-        pauseSlideshow();
+        if (isPlaying) pauseSlideshow();
         currentSlide = Math.max(currentSlide - 1, 0);
         showSlide(currentSlide);
     }
-    if (e.code === 'KeyH') controlsPanel.classList.toggle('hidden');
+    if (e.code === 'KeyH') {
+        controlsPanel.classList.toggle('hidden');
+        showControlsBtn.classList.toggle('visible');
+    }
     if (e.code === 'KeyF') {
         if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -474,14 +750,33 @@ document.onkeydown = (e) => {
             document.documentElement.requestFullscreen();
         }
     }
+    if (e.code === 'Escape') {
+        if (controlsPanel.classList.contains('hidden')) {
+            controlsPanel.classList.remove('hidden');
+            showControlsBtn.classList.remove('visible');
+        }
+    }
 };
 
-// Fade out music at end
+// ==================== AUDIO ====================
 bgMusic.ontimeupdate = () => {
+    // Fade out music near end
     if (bgMusic.duration - bgMusic.currentTime < 5) {
         bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
     }
 };
 
-// Show first slide on load
+// Loop audio si termina antes que el slideshow
+bgMusic.onended = () => {
+    if (isPlaying) {
+        bgMusic.currentTime = 0;
+        bgMusic.play();
+    }
+};
+
+// ==================== INICIALIZACIÓN ====================
+// Mostrar primer slide
 slides[0].classList.add('active');
+
+// Crear overlay de autoplay
+createAutoplayOverlay();

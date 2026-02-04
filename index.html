@@ -19,9 +19,26 @@
         <div id="slidesContainer"></div>
     </div>
 
+    <!-- Lightbox para expandir fotos -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">✕</button>
+        <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
+        <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
+        <div class="lightbox-content">
+            <img id="lightboxImg" src="" alt="Foto ampliada">
+        </div>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+
+    <!-- Botón flotante para mostrar controles -->
+    <button class="show-controls-btn" id="showControlsBtn" title="Mostrar controles">
+        <span>☰</span>
+    </button>
+
     <div class="controls-panel" id="controlsPanel">
-        <div class="progress-bar">
+        <div class="progress-bar" id="progressBar">
             <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-tooltip" id="progressTooltip">Slide 1</div>
         </div>
         <div class="controls-buttons">
             <button class="control-btn" id="hideBtn">Ocultar</button>
