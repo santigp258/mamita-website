@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>En Memoria de Ana del Carmen Pulgarín</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400&family=Dancing+Script:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <audio id="bgMusic" preload="auto">
+        <source src="assets/musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="memorial-container">
+        <div class="floating-elements" id="floatingElements"></div>
+
+        <!-- Los slides se generarán dinámicamente -->
+        <div id="slidesContainer"></div>
+    </div>
+
+    <div class="controls-panel" id="controlsPanel">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="controls-buttons">
+            <button class="control-btn" id="hideBtn">Ocultar</button>
+            <button class="control-btn primary" id="playBtn">▶ REPRODUCIR</button>
+            <button class="control-btn" id="muteBtn">🔊</button>
+            <span class="slide-counter"><span id="currentSlide">1</span> / <span id="totalSlides">0</span></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,683 @@
+:root {
+    --rose-light: #f8e8e8;
+    --rose: #e8c4c4;
+    --rose-dark: #d4a5a5;
+    --mauve: #c9b1bd;
+    --lavender: #d4c5d9;
+    --cream: #faf8f5;
+    --soft-pink: #f5e6e8;
+    --deep-mauve: #8b7082;
+    --text-dark: #4a4045;
+    --text-medium: #6b5b62;
+    --text-light: #8b7b82;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: linear-gradient(180deg, #f8f0ed 0%, #f5e8e6 50%, #f0e4e4 100%);
+    color: var(--text-dark);
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.memorial-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+
+/* Floating elements */
+.floating-elements {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.petal {
+    position: absolute;
+    width: 12px;
+    height: 16px;
+    background: linear-gradient(135deg, rgba(232, 196, 196, 0.6), rgba(212, 165, 165, 0.3));
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    opacity: 0;
+}
+
+.bokeh {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+}
+
+/* Slides */
+.slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    z-index: 2;
+    padding: 5%;
+    transition: opacity 1.5s ease;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+/* ==================== INTRO SLIDE ==================== */
+.intro-slide {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.6) 0%, transparent 60%);
+    text-align: center;
+}
+
+.intro-dove {
+    font-size: clamp(40px, 6vw, 60px);
+    margin-bottom: 20px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 1.5s ease;
+}
+
+.intro-dove.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-memorial-text {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(11px, 1.5vw, 14px);
+    color: var(--text-light);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    font-weight: 300;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1.5s ease;
+}
+
+.intro-memorial-text.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-name {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(42px, 9vw, 85px);
+    color: var(--text-dark);
+    margin: 10px 0 20px;
+    line-height: 1.1;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 2s ease;
+}
+
+.intro-name.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-dates {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--text-medium);
+    letter-spacing: 4px;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1.5s ease;
+}
+
+.intro-dates.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.intro-dates .heart {
+    color: var(--rose-dark);
+    font-size: 0.8em;
+}
+
+.decorative-flowers {
+    margin-top: 35px;
+    font-size: 24px;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.decorative-flowers.show {
+    opacity: 1;
+}
+
+/* ==================== PHOTO SLIDES ==================== */
+.photo-slide {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 60%);
+}
+
+.photo-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.photo-container {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 1.5s ease;
+}
+
+.photo-container.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.photo-frame {
+    padding: 10px;
+    background: white;
+    border-radius: 3px;
+    box-shadow: 0 5px 25px rgba(139, 112, 130, 0.15), 0 15px 40px rgba(139, 112, 130, 0.1);
+}
+
+.photo-inner {
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.photo-inner img {
+    display: block;
+    max-width: 68vw;
+    max-height: 52vh;
+    object-fit: contain;
+}
+
+.photo-message {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(22px, 4vw, 36px);
+    color: var(--text-dark);
+    text-align: center;
+    max-width: 85%;
+    line-height: 1.4;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: all 1.5s ease;
+}
+
+.photo-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ==================== MESSAGE SLIDE ==================== */
+.message-slide {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, transparent 60%);
+    text-align: center;
+}
+
+.message-flower {
+    font-size: clamp(40px, 6vw, 55px);
+    margin-bottom: 30px;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.message-flower.show {
+    opacity: 1;
+}
+
+.message-content {
+    max-width: 850px;
+}
+
+.message-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(20px, 3.5vw, 32px);
+    line-height: 1.9;
+    color: var(--text-dark);
+    font-style: italic;
+    font-weight: 300;
+    margin-bottom: 25px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1.5s ease;
+}
+
+.message-line.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.message-signature {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(28px, 5vw, 48px);
+    color: var(--deep-mauve);
+    margin-top: 35px;
+    font-weight: 600;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 2s ease;
+}
+
+.message-signature.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ==================== VERSE SLIDE ==================== */
+.verse-slide {
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.6) 0%, transparent 50%);
+}
+
+.verse-container {
+    text-align: center;
+    max-width: 800px;
+}
+
+.verse-icon {
+    font-size: clamp(35px, 5vw, 50px);
+    margin-bottom: 25px;
+    color: var(--rose-dark);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 1.5s ease;
+}
+
+.verse-icon.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.verse-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 4.5vw, 42px);
+    font-style: italic;
+    color: var(--text-dark);
+    line-height: 1.5;
+    font-weight: 400;
+    opacity: 0;
+    transform: translateY(25px);
+    transition: all 2s ease;
+}
+
+.verse-text.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.verse-reference {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--text-light);
+    letter-spacing: 3px;
+    margin-top: 35px;
+    font-weight: 300;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.verse-reference.show {
+    opacity: 1;
+}
+
+/* ==================== FINAL SLIDE ==================== */
+.final-slide {
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, transparent 50%);
+}
+
+.final-portrait {
+    position: relative;
+    margin-bottom: 35px;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 2s ease;
+}
+
+.final-portrait.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.portrait-glow {
+    position: absolute;
+    inset: -15px;
+    background: radial-gradient(circle, rgba(232, 196, 196, 0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.03); }
+}
+
+.portrait-frame {
+    position: relative;
+    padding: 5px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 8px 30px rgba(139, 112, 130, 0.2);
+    z-index: 1;
+}
+
+.portrait-frame img {
+    display: block;
+    width: clamp(180px, 28vw, 280px);
+    height: clamp(180px, 28vw, 280px);
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.final-eternal {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(32px, 5.5vw, 52px);
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1.5s ease;
+}
+
+.final-eternal.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.final-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    color: var(--deep-mauve);
+    margin-bottom: 15px;
+    font-weight: 400;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.final-name.show {
+    opacity: 1;
+}
+
+.final-dates {
+    font-family: 'Lato', sans-serif;
+    font-size: clamp(12px, 1.8vw, 16px);
+    color: var(--text-light);
+    letter-spacing: 4px;
+    font-weight: 300;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.final-dates.show {
+    opacity: 1;
+}
+
+.final-flowers {
+    font-size: clamp(24px, 3vw, 32px);
+    margin-top: 25px;
+    opacity: 0;
+    transition: all 1.5s ease;
+}
+
+.final-flowers.show {
+    opacity: 1;
+}
+
+/* ==================== CONTROLS ==================== */
+.controls-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 25px;
+    background: linear-gradient(transparent, rgba(245, 232, 230, 0.95));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    z-index: 100;
+    transition: opacity 0.5s ease;
+}
+
+.controls-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.progress-bar {
+    width: 100%;
+    max-width: 500px;
+    height: 3px;
+    background: rgba(139, 112, 130, 0.15);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose-dark), var(--mauve));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.controls-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.control-btn {
+    background: white;
+    border: 1px solid var(--rose);
+    color: var(--text-medium);
+    padding: 10px 22px;
+    font-family: 'Lato', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.control-btn:hover {
+    background: var(--soft-pink);
+}
+
+.control-btn.primary {
+    background: linear-gradient(135deg, var(--rose-dark), var(--mauve));
+    border: none;
+    color: white;
+    padding: 12px 30px;
+}
+
+.slide-counter {
+    font-family: 'Lato', sans-serif;
+    font-size: 11px;
+    color: var(--text-light);
+    letter-spacing: 2px;
+}
+
+/* ==================== PHOTO GRIDS ==================== */
+.photo-grid {
+    display: grid;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    box-shadow: 0 5px 25px rgba(139, 112, 130, 0.1);
+}
+
+/* Grid de 6 fotos (2x3) */
+.grid-6 {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    max-width: 85vw;
+    max-height: 65vh;
+}
+
+/* Grid de 4 fotos (2x2) */
+.grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    max-width: 70vw;
+    max-height: 65vh;
+}
+
+/* Grid de 3 fotos (horizontal) */
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 85vw;
+    max-height: 50vh;
+}
+
+/* Grid de 2 fotos (lado a lado) */
+.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 75vw;
+    max-height: 55vh;
+}
+
+.grid-photo {
+    overflow: hidden;
+    border-radius: 4px;
+    background: white;
+    padding: 5px;
+    box-shadow: 0 3px 15px rgba(139, 112, 130, 0.12);
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition-delay: var(--delay, 0s);
+}
+
+.grid-photo.show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.grid-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    display: block;
+}
+
+/* Tamaños específicos para cada grid */
+.grid-6 .grid-photo {
+    height: calc((65vh - 40px - 10px) / 2);
+}
+
+.grid-4 .grid-photo {
+    height: calc((65vh - 40px - 10px) / 2);
+}
+
+.grid-3 .grid-photo {
+    height: calc(50vh - 40px);
+}
+
+.grid-2 .grid-photo {
+    height: calc(55vh - 40px);
+}
+
+/* Hover effect sutil */
+.grid-photo:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(139, 112, 130, 0.2);
+    z-index: 2;
+}
+
+/* Ajuste del mensaje para slides con grid */
+.photo-slide .photo-message {
+    margin-top: 20px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .photo-inner img {
+        max-width: 88vw;
+        max-height: 48vh;
+    }
+
+    /* Grids responsivos */
+    .grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        max-width: 92vw;
+        max-height: 60vh;
+    }
+
+    .grid-6 .grid-photo {
+        height: calc((60vh - 50px - 20px) / 3);
+    }
+
+    .grid-4 {
+        max-width: 92vw;
+        max-height: 55vh;
+    }
+
+    .grid-4 .grid-photo {
+        height: calc((55vh - 40px - 10px) / 2);
+    }
+
+    .grid-3 {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, 1fr);
+        max-width: 85vw;
+        max-height: 60vh;
+    }
+
+    .grid-3 .grid-photo {
+        height: calc((60vh - 50px - 20px) / 3);
+    }
+
+    .grid-2 {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(2, 1fr);
+        max-width: 85vw;
+        max-height: 55vh;
+    }
+
+    .grid-2 .grid-photo {
+        height: calc((55vh - 40px - 10px) / 2);
+    }
+
+    .photo-grid {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .photo-message {
+        font-size: clamp(18px, 3.5vw, 28px) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        max-height: 55vh;
+    }
+
+    .grid-6 .grid-photo {
+        height: calc((55vh - 45px - 16px) / 3);
+    }
+
+    .photo-grid {
+        gap: 6px;
+        padding: 8px;
+    }
+}
