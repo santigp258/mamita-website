@@ -10,11 +10,14 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 // ==================== CONFIGURACIÓN ====================
-const CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
-const asset = (path) => CDN_BASE + path;
+var CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
+
+function asset(path) {
+    return CDN_BASE + path;
+}
 
 // ==================== CONFIGURACIÓN DE FOTOS ====================
-const photoNames = {
+var photoNames = {
     cumpleanos50: ["foto_01.jpg", "foto_02.jpg", "foto_03.jpg", "foto_04.jpg", "foto_05.jpg", "foto_06.jpg"],
     momentosFamilia: ["foto_07.jpg", "foto_08.jpg", "foto_12.jpg", "foto_13.jpg"],
     vidaCotidiana: ["foto_09.jpg", "foto_10.jpg", "foto_11.jpg"],
@@ -33,7 +36,7 @@ const photoNames = {
     ultimaFoto: ["ultima.jpeg"]
 };
 
-const photoMessages = {
+var photoMessages = {
     cumpleanos50: "Siempre celebrando a tus hijos, nietos y toda tu familia",
     momentosFamilia: "Los momentos más simples eran los más especiales",
     vidaCotidiana: "Trabajadora incansable, siempre atenta a todo",
@@ -52,65 +55,155 @@ const photoMessages = {
     ultimaFoto: "Hasta siempre, mamita querida"
 };
 
-const getPhotos = (category) => photoNames[category].map(name => asset(name));
-const getMessage = (category) => photoMessages[category];
-const mainPhoto = asset("main_photo.jpg");
+function getPhotos(category) {
+    return photoNames[category].map(function(name) {
+        return asset(name);
+    });
+}
 
-// ==================== VARIABLES GLOBALES ====================
-let allPhotos = [];
-let totalSlides = 0;
-let slides = null;
-let currentSlide = 0;
-let isPlaying = false;
-let slideTimer = null;
-let audioTimeOnPause = 0;
-let currentLightboxIndex = 0;
-let currentSlidePhotos = [];
-let petalInterval = null;
-let bokehInterval = null;
-let petalCount = 0;
-let bokehCount = 0;
-let galleryLoaded = false;
-let isMobile = false;
+function getMessage(category) {
+    return photoMessages[category];
+}
 
-// DOM elements (se inicializan en init)
-let floatingContainer, progressBar, progressFill, progressTooltip;
-let currentSlideEl, totalSlidesEl, playBtn, hideBtn, controlsPanel, showControlsBtn;
-let bgMusic, muteBtn, lightbox, lightboxImg, lightboxClose, lightboxPrev, lightboxNext, lightboxCounter;
-let slidesContainer;
+// ==================== VARIABLES GLOBALES (sin inicializar) ====================
+var allPhotos = [];
+var totalSlides = 0;
+var slides = null;
+var currentSlide = 0;
+var isPlaying = false;
+var slideTimer = null;
+var audioTimeOnPause = 0;
+var currentLightboxIndex = 0;
+var currentSlidePhotos = [];
+var petalInterval = null;
+var bokehInterval = null;
+var petalCount = 0;
+var bokehCount = 0;
+var galleryLoaded = false;
+var isMobile = false;
+var appInitialized = false;
+
+// DOM elements - se inicializan después de click en Comenzar
+var floatingContainer, progressBar, progressFill, progressTooltip;
+var currentSlideEl, totalSlidesEl, playBtn, hideBtn, controlsPanel, showControlsBtn;
+var bgMusic, muteBtn, lightbox, lightboxImg, lightboxClose, lightboxPrev, lightboxNext, lightboxCounter;
+var slidesContainer;
+
+// ==================== SOLO MOSTRAR OVERLAY INICIAL ====================
+function showInitialOverlay() {
+    var overlay = document.createElement('div');
+    overlay.className = 'autoplay-overlay';
+    overlay.id = 'autoplayOverlay';
+    overlay.innerHTML =
+        '<div class="autoplay-content">' +
+            '<div class="autoplay-dove">🕊️</div>' +
+            '<div class="autoplay-title">En Memoria de Ana del Carmen</div>' +
+            '<div class="autoplay-subtitle">1956 — 2026</div>' +
+            '<button class="autoplay-btn" id="autoplayBtn">▶ Comenzar</button>' +
+            '<div class="autoplay-hint">Presiona para iniciar el memorial con música</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    var btn = document.getElementById('autoplayBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            // Ocultar overlay
+            overlay.classList.add('hidden');
+
+            // Después de la animación, inicializar TODO
+            setTimeout(function() {
+                overlay.remove();
+                initializeApp();
+            }, 800);
+        });
+    }
+}
+
+// ==================== INICIALIZACIÓN COMPLETA (después de click) ====================
+function initializeApp() {
+    if (appInitialized) return;
+    appInitialized = true;
+
+    try {
+        // Detección móvil
+        isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        // Generar slides
+        totalSlides = generateSlides();
+        slides = document.querySelectorAll('.slide');
+
+        // Obtener elementos del DOM
+        floatingContainer = document.getElementById('floatingElements');
+        progressBar = document.getElementById('progressBar');
+        progressFill = document.getElementById('progressFill');
+        progressTooltip = document.getElementById('progressTooltip');
+        currentSlideEl = document.getElementById('currentSlide');
+        totalSlidesEl = document.getElementById('totalSlides');
+        playBtn = document.getElementById('playBtn');
+        hideBtn = document.getElementById('hideBtn');
+        controlsPanel = document.getElementById('controlsPanel');
+        showControlsBtn = document.getElementById('showControlsBtn');
+        bgMusic = document.getElementById('bgMusic');
+        muteBtn = document.getElementById('muteBtn');
+        lightbox = document.getElementById('lightbox');
+        lightboxImg = document.getElementById('lightboxImg');
+        lightboxClose = document.getElementById('lightboxClose');
+        lightboxPrev = document.getElementById('lightboxPrev');
+        lightboxNext = document.getElementById('lightboxNext');
+        lightboxCounter = document.getElementById('lightboxCounter');
+        slidesContainer = document.getElementById('slidesContainer');
+
+        if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
+
+        // Mostrar primer slide
+        if (slides && slides.length > 0) {
+            slides[0].classList.add('active');
+        }
+
+        // Configurar event listeners
+        setupEventListeners();
+
+        // Iniciar elementos flotantes
+        startFloatingElements();
+
+        // Iniciar slideshow
+        startSlideshow();
+
+    } catch (e) {
+        console.error('Error en inicialización:', e);
+    }
+}
 
 // ==================== GENERACIÓN DE SLIDES ====================
 function generateSlides() {
-    const container = document.getElementById('slidesContainer');
+    var container = document.getElementById('slidesContainer');
     if (!container) return 0;
 
-    let slideIndex = 0;
-    let html = '';
+    var slideIndex = 0;
+    var html = '';
 
-    html += `
-        <div class="slide intro-slide" data-slide="${slideIndex}" data-type="intro">
-            <div class="intro-dove">🕊️</div>
-            <div class="intro-memorial-text">En Amorosa Memoria</div>
-            <div class="intro-name">Ana del Carmen Pulgarín</div>
-            <div class="intro-dates">
-                <span>2 de Agosto, 1956</span>
-                <span class="heart">♡</span>
-                <span>28 de Enero, 2026</span>
-            </div>
-            <div class="decorative-flowers">✿ ❀ ✿</div>
-        </div>
-    `;
+    html += '<div class="slide intro-slide" data-slide="' + slideIndex + '" data-type="intro">' +
+            '<div class="intro-dove">🕊️</div>' +
+            '<div class="intro-memorial-text">En Amorosa Memoria</div>' +
+            '<div class="intro-name">Ana del Carmen Pulgarín</div>' +
+            '<div class="intro-dates">' +
+                '<span>2 de Agosto, 1956</span>' +
+                '<span class="heart">♡</span>' +
+                '<span>28 de Enero, 2026</span>' +
+            '</div>' +
+            '<div class="decorative-flowers">✿ ❀ ✿</div>' +
+        '</div>';
     slideIndex++;
 
     function addPhotosToGlobal(photos) {
-        photos.forEach(photo => {
-            if (!allPhotos.includes(photo)) {
-                allPhotos.push(photo);
+        for (var i = 0; i < photos.length; i++) {
+            if (allPhotos.indexOf(photos[i]) === -1) {
+                allPhotos.push(photos[i]);
             }
-        });
+        }
     }
 
-    let photos = getPhotos('cumpleanos50');
+    var photos = getPhotos('cumpleanos50');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('cumpleanos50'), slideIndex, 'grid-6');
     slideIndex++;
@@ -125,9 +218,9 @@ function generateSlides() {
     html += createGridSlide(photos, getMessage('vidaCotidiana'), slideIndex, 'grid-3');
     slideIndex++;
 
-    const diaMadresAll = getPhotos('diaMadres');
-    const diaMadresFirst = diaMadresAll.slice(0, 6);
-    const diaMadresSecond = diaMadresAll.slice(6);
+    var diaMadresAll = getPhotos('diaMadres');
+    var diaMadresFirst = diaMadresAll.slice(0, 6);
+    var diaMadresSecond = diaMadresAll.slice(6);
 
     addPhotosToGlobal(diaMadresFirst);
     html += createGridSlide(diaMadresFirst, "Día de las Madres - Tu sonrisa lo iluminaba todo", slideIndex, 'grid-6');
@@ -137,16 +230,14 @@ function generateSlides() {
     html += createGridSlide(diaMadresSecond, getMessage('diaMadres'), slideIndex, 'grid-6');
     slideIndex++;
 
-    html += `
-        <div class="slide message-slide" data-slide="${slideIndex}" data-type="message">
-            <div class="message-flower">🌸</div>
-            <div class="message-content">
-                <p class="message-line">En tu corazón siempre hubo amor y respeto<br>por tu familia y amigos.</p>
-                <p class="message-line">Gracias por tus enseñanzas, por acercarnos a Dios<br>y por tu amor incondicional.</p>
-                <div class="message-signature">Te amamos, madre querida,<br>mamita de nuestro corazón</div>
-            </div>
-        </div>
-    `;
+    html += '<div class="slide message-slide" data-slide="' + slideIndex + '" data-type="message">' +
+            '<div class="message-flower">🌸</div>' +
+            '<div class="message-content">' +
+                '<p class="message-line">En tu corazón siempre hubo amor y respeto<br>por tu familia y amigos.</p>' +
+                '<p class="message-line">Gracias por tus enseñanzas, por acercarnos a Dios<br>y por tu amor incondicional.</p>' +
+                '<div class="message-signature">Te amamos, madre querida,<br>mamita de nuestro corazón</div>' +
+            '</div>' +
+        '</div>';
     slideIndex++;
 
     photos = getPhotos('momentosTranquilos');
@@ -209,150 +300,277 @@ function generateSlides() {
     html += createSingleSlide(photos[0], getMessage('ultimaFoto'), slideIndex);
     slideIndex++;
 
-    html += `
-        <div class="slide verse-slide" data-slide="${slideIndex}" data-type="verse">
-            <div class="verse-container">
-                <div class="verse-icon">✝</div>
-                <p class="verse-text">"Estimada es a Jehová<br>la muerte de sus santos."</p>
-                <p class="verse-reference">— Salmos 116:15</p>
-            </div>
-        </div>
-    `;
+    html += '<div class="slide verse-slide" data-slide="' + slideIndex + '" data-type="verse">' +
+            '<div class="verse-container">' +
+                '<div class="verse-icon">✝</div>' +
+                '<p class="verse-text">"Estimada es a Jehová<br>la muerte de sus santos."</p>' +
+                '<p class="verse-reference">— Salmos 116:15</p>' +
+            '</div>' +
+        '</div>';
     slideIndex++;
 
-    html += `
-        <div class="slide final-slide" data-slide="${slideIndex}" data-type="final">
-            <div class="final-portrait">
-                <div class="portrait-glow"></div>
-                <div class="portrait-frame">
-                    <img src="${mainPhoto}" alt="Ana del Carmen Pulgarín">
-                </div>
-            </div>
-            <div class="final-eternal">Por siempre en nuestros corazones</div>
-            <div class="final-name">Ana del Carmen Pulgarín</div>
-            <div class="final-dates">1956 ♡ 2026</div>
-            <div class="final-flowers">🌹</div>
-        </div>
-    `;
+    var mainPhoto = asset("main_photo.jpg");
+    html += '<div class="slide final-slide" data-slide="' + slideIndex + '" data-type="final">' +
+            '<div class="final-portrait">' +
+                '<div class="portrait-glow"></div>' +
+                '<div class="portrait-frame">' +
+                    '<img src="' + mainPhoto + '" alt="Ana del Carmen Pulgarín">' +
+                '</div>' +
+            '</div>' +
+            '<div class="final-eternal">Por siempre en nuestros corazones</div>' +
+            '<div class="final-name">Ana del Carmen Pulgarín</div>' +
+            '<div class="final-dates">1956 ♡ 2026</div>' +
+            '<div class="final-flowers">🌹</div>' +
+        '</div>';
     slideIndex++;
 
-    let galleryPhotosHtml = allPhotos.map((src, i) => `
-        <div class="gallery-thumb" data-photo-src="${src}" data-photo-index="${i}">
-            <img data-src="${src}" alt="Recuerdo ${i + 1}" loading="lazy">
-        </div>
-    `).join('');
+    var galleryPhotosHtml = '';
+    for (var i = 0; i < allPhotos.length; i++) {
+        galleryPhotosHtml += '<div class="gallery-thumb" data-photo-src="' + allPhotos[i] + '" data-photo-index="' + i + '">' +
+            '<img data-src="' + allPhotos[i] + '" alt="Recuerdo ' + (i + 1) + '" loading="lazy">' +
+        '</div>';
+    }
 
-    html += `
-        <div class="slide gallery-slide" data-slide="${slideIndex}" data-type="gallery">
-            <div class="gallery-header">
-                <div class="gallery-icon">📷</div>
-                <div class="gallery-title">Galería de Recuerdos</div>
-                <div class="gallery-subtitle">${allPhotos.length} momentos especiales</div>
-            </div>
-            <div class="gallery-thumbs-container">
-                <div class="gallery-thumbs" id="galleryThumbs">
-                    ${galleryPhotosHtml}
-                </div>
-            </div>
-            <div class="gallery-hint">Toca cualquier foto para verla en grande</div>
-        </div>
-    `;
+    html += '<div class="slide gallery-slide" data-slide="' + slideIndex + '" data-type="gallery">' +
+            '<div class="gallery-header">' +
+                '<div class="gallery-icon">📷</div>' +
+                '<div class="gallery-title">Galería de Recuerdos</div>' +
+                '<div class="gallery-subtitle">' + allPhotos.length + ' momentos especiales</div>' +
+            '</div>' +
+            '<div class="gallery-thumbs-container">' +
+                '<div class="gallery-thumbs" id="galleryThumbs">' +
+                    galleryPhotosHtml +
+                '</div>' +
+            '</div>' +
+            '<div class="gallery-hint">Toca cualquier foto para verla en grande</div>' +
+        '</div>';
 
     container.innerHTML = html;
     return slideIndex + 1;
 }
 
 function createGridSlide(photos, message, index, gridType) {
-    let photosHtml = photos.map((src, i) => `
-        <div class="grid-photo" style="--delay: ${i * 0.15}s" data-photo-src="${src}">
-            <img src="${src}" alt="Recuerdo ${i + 1}">
-        </div>
-    `).join('');
+    var photosHtml = '';
+    for (var i = 0; i < photos.length; i++) {
+        photosHtml += '<div class="grid-photo" style="--delay: ' + (i * 0.15) + 's" data-photo-src="' + photos[i] + '">' +
+            '<img src="' + photos[i] + '" alt="Recuerdo ' + (i + 1) + '">' +
+        '</div>';
+    }
 
-    return `
-        <div class="slide photo-slide ${gridType}-slide" data-slide="${index}" data-type="grid">
-            <div class="photo-grid ${gridType}">
-                ${photosHtml}
-            </div>
-            <div class="photo-message">${message}</div>
-        </div>
-    `;
+    return '<div class="slide photo-slide ' + gridType + '-slide" data-slide="' + index + '" data-type="grid">' +
+            '<div class="photo-grid ' + gridType + '">' +
+                photosHtml +
+            '</div>' +
+            '<div class="photo-message">' + message + '</div>' +
+        '</div>';
 }
 
 function createSingleSlide(src, message, index) {
-    return `
-        <div class="slide photo-slide single-slide" data-slide="${index}" data-type="single">
-            <div class="photo-wrapper">
-                <div class="photo-container">
-                    <div class="photo-frame"><div class="photo-inner" data-photo-src="${src}">
-                        <img src="${src}" alt="Recuerdo">
-                    </div></div>
-                </div>
-                <div class="photo-message">${message}</div>
-            </div>
-        </div>
-    `;
+    return '<div class="slide photo-slide single-slide" data-slide="' + index + '" data-type="single">' +
+            '<div class="photo-wrapper">' +
+                '<div class="photo-container">' +
+                    '<div class="photo-frame"><div class="photo-inner" data-photo-src="' + src + '">' +
+                        '<img src="' + src + '" alt="Recuerdo">' +
+                    '</div></div>' +
+                '</div>' +
+                '<div class="photo-message">' + message + '</div>' +
+            '</div>' +
+        '</div>';
 }
 
-// ==================== PANTALLA DE INICIO ====================
-function createAutoplayOverlay() {
-    const overlay = document.createElement('div');
-    overlay.className = 'autoplay-overlay';
-    overlay.id = 'autoplayOverlay';
-    overlay.innerHTML = `
-        <div class="autoplay-content">
-            <div class="autoplay-dove">🕊️</div>
-            <div class="autoplay-title">En Memoria de Ana del Carmen</div>
-            <div class="autoplay-subtitle">1956 — 2026</div>
-            <button class="autoplay-btn" id="autoplayBtn">▶ Comenzar</button>
-            <div class="autoplay-hint">Presiona para iniciar el memorial con música</div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const btn = document.getElementById('autoplayBtn');
-    if (btn) {
-        btn.addEventListener('click', function() {
-            overlay.classList.add('hidden');
-            setTimeout(function() {
-                overlay.remove();
-                startFloatingElements();
-                startSlideshow();
-            }, 800);
+// ==================== EVENT LISTENERS ====================
+function setupEventListeners() {
+    if (progressBar) {
+        progressBar.addEventListener('click', function(e) {
+            var rect = progressBar.getBoundingClientRect();
+            var percent = (e.clientX - rect.left) / rect.width;
+            var targetSlide = Math.floor(percent * totalSlides);
+            if (isPlaying) pauseSlideshow();
+            currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
+            showSlide(currentSlide);
         });
+
+        progressBar.addEventListener('mousemove', function(e) {
+            var rect = progressBar.getBoundingClientRect();
+            var percent = (e.clientX - rect.left) / rect.width;
+            var targetSlide = Math.floor(percent * totalSlides) + 1;
+            if (progressTooltip) {
+                progressTooltip.textContent = 'Slide ' + Math.max(1, Math.min(targetSlide, totalSlides));
+                progressTooltip.style.left = (percent * 100) + '%';
+            }
+        });
+    }
+
+    if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+    if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevPhoto);
+    if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextPhoto);
+
+    if (lightbox) {
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
+                closeLightbox();
+            }
+        });
+    }
+
+    if (slidesContainer) {
+        slidesContainer.addEventListener('click', function(e) {
+            if (lightbox && lightbox.classList.contains('active')) return;
+
+            var gridPhoto = e.target.closest('.grid-photo');
+            var photoInner = e.target.closest('.photo-inner');
+            var galleryThumb = e.target.closest('.gallery-thumb');
+
+            var src = null;
+            if (gridPhoto) src = gridPhoto.getAttribute('data-photo-src');
+            else if (photoInner) src = photoInner.getAttribute('data-photo-src');
+            else if (galleryThumb) src = galleryThumb.getAttribute('data-photo-src');
+
+            if (src) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLightbox(src);
+            }
+        });
+    }
+
+    if (playBtn) {
+        playBtn.onclick = function() {
+            if (isPlaying) pauseSlideshow();
+            else startSlideshow();
+        };
+    }
+
+    if (hideBtn) {
+        hideBtn.onclick = function() {
+            if (controlsPanel) controlsPanel.classList.add('hidden');
+            if (showControlsBtn) showControlsBtn.classList.add('visible');
+        };
+    }
+
+    if (showControlsBtn) {
+        showControlsBtn.onclick = function() {
+            if (controlsPanel) controlsPanel.classList.remove('hidden');
+            showControlsBtn.classList.remove('visible');
+        };
+    }
+
+    if (muteBtn && bgMusic) {
+        muteBtn.onclick = function() {
+            bgMusic.muted = !bgMusic.muted;
+            muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
+        };
+    }
+
+    document.onkeydown = function(e) {
+        if (lightbox && lightbox.classList.contains('active')) {
+            if (e.code === 'Escape') closeLightbox();
+            if (e.code === 'ArrowLeft') lightboxPrevPhoto();
+            if (e.code === 'ArrowRight') lightboxNextPhoto();
+            return;
+        }
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (isPlaying) pauseSlideshow();
+            else startSlideshow();
+        }
+        if (e.code === 'ArrowRight') {
+            if (isPlaying) pauseSlideshow();
+            currentSlide = Math.min(currentSlide + 1, totalSlides - 1);
+            showSlide(currentSlide);
+        }
+        if (e.code === 'ArrowLeft') {
+            if (isPlaying) pauseSlideshow();
+            currentSlide = Math.max(currentSlide - 1, 0);
+            showSlide(currentSlide);
+        }
+        if (e.code === 'KeyH') {
+            if (controlsPanel) controlsPanel.classList.toggle('hidden');
+            if (showControlsBtn) showControlsBtn.classList.toggle('visible');
+        }
+        if (e.code === 'KeyF') {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen().catch(function() {});
+            }
+        }
+        if (e.code === 'Escape') {
+            if (controlsPanel && controlsPanel.classList.contains('hidden')) {
+                controlsPanel.classList.remove('hidden');
+                if (showControlsBtn) showControlsBtn.classList.remove('visible');
+            }
+        }
+    };
+
+    if (bgMusic) {
+        bgMusic.ontimeupdate = function() {
+            if (bgMusic.duration - bgMusic.currentTime < 5) {
+                bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
+            }
+        };
+
+        bgMusic.onended = function() {
+            if (isPlaying) {
+                bgMusic.currentTime = 0;
+                bgMusic.play();
+            }
+        };
+    }
+
+    // IntersectionObserver para galería
+    if ('IntersectionObserver' in window) {
+        try {
+            var galleryObserver = new IntersectionObserver(function(entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    if (entries[i].isIntersecting) {
+                        loadGalleryImages();
+                        galleryObserver.disconnect();
+                    }
+                }
+            }, { threshold: 0.1 });
+
+            var gallerySlide = document.querySelector('.gallery-slide');
+            if (gallerySlide) {
+                galleryObserver.observe(gallerySlide);
+            }
+        } catch (e) {
+            console.log('IntersectionObserver error');
+        }
     }
 }
 
 // ==================== FLOATING ELEMENTS ====================
 function createPetal() {
     if (!floatingContainer) return;
-    const MAX_PETALS = isMobile ? 3 : 8;
+    var MAX_PETALS = isMobile ? 3 : 8;
     if (petalCount >= MAX_PETALS) return;
     petalCount++;
 
-    const petal = document.createElement('div');
+    var petal = document.createElement('div');
     petal.className = 'petal';
     petal.style.left = Math.random() * 100 + '%';
     petal.style.top = '-5%';
     floatingContainer.appendChild(petal);
 
-    const duration = 18000 + Math.random() * 12000;
-    const startX = parseFloat(petal.style.left);
-    const amplitude = 40 + Math.random() * 80;
-    const startTime = Date.now();
+    var duration = 18000 + Math.random() * 12000;
+    var startX = parseFloat(petal.style.left);
+    var amplitude = 40 + Math.random() * 80;
+    var startTime = Date.now();
 
     function animate() {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
+        var elapsed = Date.now() - startTime;
+        var progress = elapsed / duration;
         if (progress >= 1) {
             petal.remove();
             petalCount--;
             return;
         }
 
-        const y = -5 + (progress * 115);
-        const x = startX + Math.sin(elapsed * 0.001) * amplitude;
-        const opacity = progress < 0.1 ? progress * 10 : progress > 0.9 ? (1 - progress) * 10 : 1;
+        var y = -5 + (progress * 115);
+        var x = startX + Math.sin(elapsed * 0.001) * amplitude;
+        var opacity = progress < 0.1 ? progress * 10 : progress > 0.9 ? (1 - progress) * 10 : 1;
 
         petal.style.top = y + '%';
         petal.style.left = x + '%';
@@ -365,13 +583,13 @@ function createPetal() {
 
 function createBokeh() {
     if (!floatingContainer) return;
-    const MAX_BOKEHS = isMobile ? 5 : 15;
+    var MAX_BOKEHS = isMobile ? 5 : 15;
     if (bokehCount >= MAX_BOKEHS) return;
     bokehCount++;
 
-    const bokeh = document.createElement('div');
+    var bokeh = document.createElement('div');
     bokeh.className = 'bokeh';
-    const size = 30 + Math.random() * 60;
+    var size = 30 + Math.random() * 60;
     bokeh.style.width = size + 'px';
     bokeh.style.height = size + 'px';
     bokeh.style.background = 'radial-gradient(circle, rgba(232,196,196,0.3) 0%, transparent 70%)';
@@ -379,22 +597,22 @@ function createBokeh() {
     bokeh.style.top = '110%';
     floatingContainer.appendChild(bokeh);
 
-    const duration = 20000 + Math.random() * 15000;
-    const startX = parseFloat(bokeh.style.left);
-    const startTime = Date.now();
+    var duration = 20000 + Math.random() * 15000;
+    var startX = parseFloat(bokeh.style.left);
+    var startTime = Date.now();
 
     function animate() {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
+        var elapsed = Date.now() - startTime;
+        var progress = elapsed / duration;
         if (progress >= 1) {
             bokeh.remove();
             bokehCount--;
             return;
         }
 
-        const y = 110 - (progress * 130);
-        const x = startX + Math.sin(elapsed * 0.0008) * 30;
-        const opacity = progress < 0.15 ? progress / 0.15 : progress > 0.85 ? (1 - progress) / 0.15 : 1;
+        var y = 110 - (progress * 130);
+        var x = startX + Math.sin(elapsed * 0.0008) * 30;
+        var opacity = progress < 0.15 ? progress / 0.15 : progress > 0.85 ? (1 - progress) / 0.15 : 1;
 
         bokeh.style.top = y + '%';
         bokeh.style.left = x + '%';
@@ -413,7 +631,7 @@ function startFloatingElements() {
 // ==================== SLIDE FUNCTIONS ====================
 function getSlideDuration(slideEl) {
     if (!slideEl || !slideEl.dataset) return 12000;
-    const type = slideEl.dataset.type;
+    var type = slideEl.dataset.type;
     switch(type) {
         case 'intro': return 10000;
         case 'message': return 20000;
@@ -422,27 +640,30 @@ function getSlideDuration(slideEl) {
         case 'gallery': return 30000;
         case 'single': return 12000;
         case 'grid':
-            const grid = slideEl.querySelector('.photo-grid');
-            const gridClass = grid ? grid.className : '';
-            if (gridClass.includes('grid-6')) return 18000;
-            if (gridClass.includes('grid-4')) return 15000;
-            if (gridClass.includes('grid-3')) return 14000;
-            if (gridClass.includes('grid-2')) return 12000;
+            var grid = slideEl.querySelector('.photo-grid');
+            var gridClass = grid ? grid.className : '';
+            if (gridClass.indexOf('grid-6') !== -1) return 18000;
+            if (gridClass.indexOf('grid-4') !== -1) return 15000;
+            if (gridClass.indexOf('grid-3') !== -1) return 14000;
+            if (gridClass.indexOf('grid-2') !== -1) return 12000;
             return 12000;
         default: return 12000;
     }
 }
 
 function clearAllAnimations() {
-    document.querySelectorAll('.show').forEach(function(el) {
-        el.classList.remove('show');
-    });
+    var elements = document.querySelectorAll('.show');
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].classList.remove('show');
+    }
 }
 
 function showSlide(index) {
     if (!slides || !slides.length) return;
 
-    slides.forEach(function(s) { s.classList.remove('active'); });
+    for (var i = 0; i < slides.length; i++) {
+        slides[i].classList.remove('active');
+    }
     clearAllAnimations();
 
     if (slides[index]) {
@@ -456,8 +677,8 @@ function showSlide(index) {
 
 function animateSlide(index) {
     if (!slides || !slides[index]) return;
-    const slide = slides[index];
-    const type = slide.dataset ? slide.dataset.type : null;
+    var slide = slides[index];
+    var type = slide.dataset ? slide.dataset.type : null;
 
     if (type === 'intro') {
         setTimeout(function() { var el = slide.querySelector('.intro-dove'); if(el) el.classList.add('show'); }, 100);
@@ -485,11 +706,13 @@ function animateSlide(index) {
         setTimeout(function() { var el = slide.querySelector('.final-flowers'); if(el) el.classList.add('show'); }, 7500);
     }
     else if (type === 'grid') {
-        const photos = slide.querySelectorAll('.grid-photo');
-        photos.forEach(function(photo, i) {
-            setTimeout(function() { photo.classList.add('show'); }, 200 + (i * 200));
-        });
-        const msgDelay = 200 + (photos.length * 200) + 500;
+        var photos = slide.querySelectorAll('.grid-photo');
+        for (var i = 0; i < photos.length; i++) {
+            (function(idx, photo) {
+                setTimeout(function() { photo.classList.add('show'); }, 200 + (idx * 200));
+            })(i, photos[i]);
+        }
+        var msgDelay = 200 + (photos.length * 200) + 500;
         setTimeout(function() { var el = slide.querySelector('.photo-message'); if(el) el.classList.add('show'); }, msgDelay);
     }
     else if (type === 'single') {
@@ -556,15 +779,16 @@ function pauseSlideshow() {
 function openLightbox(photoSrc) {
     if (isPlaying) pauseSlideshow();
 
-    const activeSlide = document.querySelector('.slide.active');
+    var activeSlide = document.querySelector('.slide.active');
     currentSlidePhotos = [];
 
     if (activeSlide && activeSlide.dataset && activeSlide.dataset.type === 'gallery') {
         currentSlidePhotos = allPhotos.slice();
     } else if (activeSlide) {
-        activeSlide.querySelectorAll('[data-photo-src]').forEach(function(el) {
-            currentSlidePhotos.push(el.dataset.photoSrc);
-        });
+        var elements = activeSlide.querySelectorAll('[data-photo-src]');
+        for (var i = 0; i < elements.length; i++) {
+            currentSlidePhotos.push(elements[i].dataset.photoSrc);
+        }
     }
 
     currentLightboxIndex = currentSlidePhotos.indexOf(photoSrc);
@@ -604,16 +828,16 @@ function loadGalleryImages() {
     if (galleryLoaded) return;
     galleryLoaded = true;
 
-    const galleryThumbs = document.getElementById('galleryThumbs');
+    var galleryThumbs = document.getElementById('galleryThumbs');
     if (!galleryThumbs) return;
 
-    const images = galleryThumbs.querySelectorAll('img[data-src]');
+    var images = galleryThumbs.querySelectorAll('img[data-src]');
 
     if (isMobile) {
-        let index = 0;
-        const loadNext = function() {
+        var index = 0;
+        function loadNext() {
             if (index < images.length) {
-                const img = images[index];
+                var img = images[index];
                 if (img && img.dataset && img.dataset.src) {
                     img.src = img.dataset.src;
                     img.removeAttribute('data-src');
@@ -621,224 +845,20 @@ function loadGalleryImages() {
                 index++;
                 setTimeout(loadNext, 100);
             }
-        };
+        }
         loadNext();
     } else {
-        images.forEach(function(img) {
+        for (var i = 0; i < images.length; i++) {
+            var img = images[i];
             if (img && img.dataset && img.dataset.src) {
                 img.src = img.dataset.src;
                 img.removeAttribute('data-src');
             }
-        });
+        }
     }
 }
 
-// ==================== INICIALIZACIÓN ====================
-function init() {
-    try {
-        // Detección móvil
-        isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-
-        // Generar slides
-        totalSlides = generateSlides();
-        slides = document.querySelectorAll('.slide');
-
-        // Obtener elementos del DOM
-        floatingContainer = document.getElementById('floatingElements');
-        progressBar = document.getElementById('progressBar');
-        progressFill = document.getElementById('progressFill');
-        progressTooltip = document.getElementById('progressTooltip');
-        currentSlideEl = document.getElementById('currentSlide');
-        totalSlidesEl = document.getElementById('totalSlides');
-        playBtn = document.getElementById('playBtn');
-        hideBtn = document.getElementById('hideBtn');
-        controlsPanel = document.getElementById('controlsPanel');
-        showControlsBtn = document.getElementById('showControlsBtn');
-        bgMusic = document.getElementById('bgMusic');
-        muteBtn = document.getElementById('muteBtn');
-        lightbox = document.getElementById('lightbox');
-        lightboxImg = document.getElementById('lightboxImg');
-        lightboxClose = document.getElementById('lightboxClose');
-        lightboxPrev = document.getElementById('lightboxPrev');
-        lightboxNext = document.getElementById('lightboxNext');
-        lightboxCounter = document.getElementById('lightboxCounter');
-        slidesContainer = document.getElementById('slidesContainer');
-
-        if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
-
-        // Mostrar primer slide
-        if (slides && slides.length > 0) {
-            slides[0].classList.add('active');
-        }
-
-        // Event listeners
-        if (progressBar) {
-            progressBar.addEventListener('click', function(e) {
-                const rect = progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                const targetSlide = Math.floor(percent * totalSlides);
-                if (isPlaying) pauseSlideshow();
-                currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
-                showSlide(currentSlide);
-            });
-
-            progressBar.addEventListener('mousemove', function(e) {
-                const rect = progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                const targetSlide = Math.floor(percent * totalSlides) + 1;
-                if (progressTooltip) {
-                    progressTooltip.textContent = 'Slide ' + Math.max(1, Math.min(targetSlide, totalSlides));
-                    progressTooltip.style.left = (percent * 100) + '%';
-                }
-            });
-        }
-
-        if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
-        if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevPhoto);
-        if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextPhoto);
-
-        if (lightbox) {
-            lightbox.addEventListener('click', function(e) {
-                if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
-                    closeLightbox();
-                }
-            });
-        }
-
-        if (slidesContainer) {
-            slidesContainer.addEventListener('click', function(e) {
-                if (lightbox && lightbox.classList.contains('active')) return;
-
-                const gridPhoto = e.target.closest('.grid-photo');
-                const photoInner = e.target.closest('.photo-inner');
-                const galleryThumb = e.target.closest('.gallery-thumb');
-
-                var src = null;
-                if (gridPhoto) src = gridPhoto.getAttribute('data-photo-src');
-                else if (photoInner) src = photoInner.getAttribute('data-photo-src');
-                else if (galleryThumb) src = galleryThumb.getAttribute('data-photo-src');
-
-                if (src) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openLightbox(src);
-                }
-            });
-        }
-
-        if (playBtn) {
-            playBtn.onclick = function() {
-                if (isPlaying) pauseSlideshow();
-                else startSlideshow();
-            };
-        }
-
-        if (hideBtn) {
-            hideBtn.onclick = function() {
-                if (controlsPanel) controlsPanel.classList.add('hidden');
-                if (showControlsBtn) showControlsBtn.classList.add('visible');
-            };
-        }
-
-        if (showControlsBtn) {
-            showControlsBtn.onclick = function() {
-                if (controlsPanel) controlsPanel.classList.remove('hidden');
-                showControlsBtn.classList.remove('visible');
-            };
-        }
-
-        if (muteBtn && bgMusic) {
-            muteBtn.onclick = function() {
-                bgMusic.muted = !bgMusic.muted;
-                muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
-            };
-        }
-
-        document.onkeydown = function(e) {
-            if (lightbox && lightbox.classList.contains('active')) {
-                if (e.code === 'Escape') closeLightbox();
-                if (e.code === 'ArrowLeft') lightboxPrevPhoto();
-                if (e.code === 'ArrowRight') lightboxNextPhoto();
-                return;
-            }
-
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (isPlaying) pauseSlideshow();
-                else startSlideshow();
-            }
-            if (e.code === 'ArrowRight') {
-                if (isPlaying) pauseSlideshow();
-                currentSlide = Math.min(currentSlide + 1, totalSlides - 1);
-                showSlide(currentSlide);
-            }
-            if (e.code === 'ArrowLeft') {
-                if (isPlaying) pauseSlideshow();
-                currentSlide = Math.max(currentSlide - 1, 0);
-                showSlide(currentSlide);
-            }
-            if (e.code === 'KeyH') {
-                if (controlsPanel) controlsPanel.classList.toggle('hidden');
-                if (showControlsBtn) showControlsBtn.classList.toggle('visible');
-            }
-            if (e.code === 'KeyF') {
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                } else {
-                    document.documentElement.requestFullscreen().catch(function() {});
-                }
-            }
-            if (e.code === 'Escape') {
-                if (controlsPanel && controlsPanel.classList.contains('hidden')) {
-                    controlsPanel.classList.remove('hidden');
-                    if (showControlsBtn) showControlsBtn.classList.remove('visible');
-                }
-            }
-        };
-
-        if (bgMusic) {
-            bgMusic.ontimeupdate = function() {
-                if (bgMusic.duration - bgMusic.currentTime < 5) {
-                    bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
-                }
-            };
-
-            bgMusic.onended = function() {
-                if (isPlaying) {
-                    bgMusic.currentTime = 0;
-                    bgMusic.play();
-                }
-            };
-        }
-
-        // IntersectionObserver para galería
-        if ('IntersectionObserver' in window) {
-            try {
-                const galleryObserver = new IntersectionObserver(function(entries) {
-                    entries.forEach(function(entry) {
-                        if (entry.isIntersecting) {
-                            loadGalleryImages();
-                            galleryObserver.disconnect();
-                        }
-                    });
-                }, { threshold: 0.1 });
-
-                const gallerySlide = document.querySelector('.gallery-slide');
-                if (gallerySlide) {
-                    galleryObserver.observe(gallerySlide);
-                }
-            } catch (e) {
-                console.log('IntersectionObserver error');
-            }
-        }
-
-        // Crear overlay de autoplay
-        createAutoplayOverlay();
-
-    } catch (e) {
-        console.error('Error en inicialización:', e);
-    }
-}
-
-// Ejecutar SOLO cuando el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', init);
+// ==================== PUNTO DE ENTRADA ====================
+// SOLO mostrar el overlay inicial cuando el DOM esté listo
+// Todo lo demás se carga después de hacer click en "Comenzar"
+document.addEventListener('DOMContentLoaded', showInitialOverlay);
