@@ -1,8 +1,7 @@
 // ==================== ERROR HANDLER GLOBAL ====================
-// Prevenir que errores no manejados causen recargas en móvil
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error('Error:', msg, 'at', url, lineNo);
-    return true; // Prevenir comportamiento por defecto
+    return true;
 };
 
 window.addEventListener('unhandledrejection', function(event) {
@@ -11,16 +10,10 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 // ==================== CONFIGURACIÓN ====================
-// CDN de Cloudinary
 const CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
-
-// Helper para construir URLs con CDN (lazy - solo genera string cuando se llama)
 const asset = (path) => CDN_BASE + path;
 
 // ==================== CONFIGURACIÓN DE FOTOS ====================
-// Solo almacenamos los nombres de archivo, no las URLs completas
-// Las URLs se generan bajo demanda para reducir memoria inicial
-
 const photoNames = {
     cumpleanos50: ["foto_01.jpg", "foto_02.jpg", "foto_03.jpg", "foto_04.jpg", "foto_05.jpg", "foto_06.jpg"],
     momentosFamilia: ["foto_07.jpg", "foto_08.jpg", "foto_12.jpg", "foto_13.jpg"],
@@ -59,23 +52,41 @@ const photoMessages = {
     ultimaFoto: "Hasta siempre, mamita querida"
 };
 
-// Helper para obtener fotos de una categoría (genera URLs bajo demanda)
 const getPhotos = (category) => photoNames[category].map(name => asset(name));
 const getMessage = (category) => photoMessages[category];
-
-// Foto principal para el slide final
 const mainPhoto = asset("main_photo.jpg");
 
-// Array global para almacenar todas las fotos del slideshow (para lightbox)
+// ==================== VARIABLES GLOBALES ====================
 let allPhotos = [];
+let totalSlides = 0;
+let slides = null;
+let currentSlide = 0;
+let isPlaying = false;
+let slideTimer = null;
+let audioTimeOnPause = 0;
+let currentLightboxIndex = 0;
+let currentSlidePhotos = [];
+let petalInterval = null;
+let bokehInterval = null;
+let petalCount = 0;
+let bokehCount = 0;
+let galleryLoaded = false;
+let isMobile = false;
 
-// ==================== GENERACIÓN DINÁMICA DE SLIDES ====================
+// DOM elements (se inicializan en init)
+let floatingContainer, progressBar, progressFill, progressTooltip;
+let currentSlideEl, totalSlidesEl, playBtn, hideBtn, controlsPanel, showControlsBtn;
+let bgMusic, muteBtn, lightbox, lightboxImg, lightboxClose, lightboxPrev, lightboxNext, lightboxCounter;
+let slidesContainer;
+
+// ==================== GENERACIÓN DE SLIDES ====================
 function generateSlides() {
     const container = document.getElementById('slidesContainer');
+    if (!container) return 0;
+
     let slideIndex = 0;
     let html = '';
 
-    // Slide 0: Intro
     html += `
         <div class="slide intro-slide" data-slide="${slideIndex}" data-type="intro">
             <div class="intro-dove">🕊️</div>
@@ -91,7 +102,6 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // Función helper para agregar fotos al array global
     function addPhotosToGlobal(photos) {
         photos.forEach(photo => {
             if (!allPhotos.includes(photo)) {
@@ -100,25 +110,21 @@ function generateSlides() {
         });
     }
 
-    // SECCIÓN 1: Cumpleaños 50 - Grid de 6 fotos (2x3)
     let photos = getPhotos('cumpleanos50');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('cumpleanos50'), slideIndex, 'grid-6');
     slideIndex++;
 
-    // SECCIÓN 2: Momentos en familia - Grid de 4 fotos (2x2)
     photos = getPhotos('momentosFamilia');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('momentosFamilia'), slideIndex, 'grid-4');
     slideIndex++;
 
-    // SECCIÓN 3: Vida cotidiana - 3 fotos horizontal
     photos = getPhotos('vidaCotidiana');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('vidaCotidiana'), slideIndex, 'grid-3');
     slideIndex++;
 
-    // SECCIÓN 4: Día de las Madres - Collage grande (12 fotos en 2 slides)
     const diaMadresAll = getPhotos('diaMadres');
     const diaMadresFirst = diaMadresAll.slice(0, 6);
     const diaMadresSecond = diaMadresAll.slice(6);
@@ -131,7 +137,6 @@ function generateSlides() {
     html += createGridSlide(diaMadresSecond, getMessage('diaMadres'), slideIndex, 'grid-6');
     slideIndex++;
 
-    // Slide de mensaje/dedicatoria (mitad del slideshow)
     html += `
         <div class="slide message-slide" data-slide="${slideIndex}" data-type="message">
             <div class="message-flower">🌸</div>
@@ -144,79 +149,66 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // SECCIÓN 5: Momentos tranquilos - 4 fotos
     photos = getPhotos('momentosTranquilos');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('momentosTranquilos'), slideIndex, 'grid-4');
     slideIndex++;
 
-    // SECCIÓN 6: Cumpleaños con hija - 2 fotos lado a lado
     photos = getPhotos('cumpleanosHija');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('cumpleanosHija'), slideIndex, 'grid-2');
     slideIndex++;
 
-    // SECCIÓN 7: Besos con hijos/nietos - 3 fotos
     photos = getPhotos('besosHijosNietos');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('besosHijosNietos'), slideIndex, 'grid-3');
     slideIndex++;
 
-    // SECCIÓN 8: Momento de paz - 1 foto destacada
     photos = getPhotos('momentosPaz');
     addPhotosToGlobal(photos);
     html += createSingleSlide(photos[0], getMessage('momentosPaz'), slideIndex);
     slideIndex++;
 
-    // SECCIÓN 9: Más celebraciones - 3 fotos
     photos = getPhotos('celebraciones');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('celebraciones'), slideIndex, 'grid-3');
     slideIndex++;
 
-    // SECCIÓN 10: Reuniones familiares - 4 fotos webp
     photos = getPhotos('reunionesFamiliares');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('reunionesFamiliares'), slideIndex, 'grid-4');
     slideIndex++;
 
-    // SECCIÓN 11: Familia completa al aire libre - 2 fotos webp
     photos = getPhotos('familiaCompleta');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('familiaCompleta'), slideIndex, 'grid-2');
     slideIndex++;
 
-    // SECCIÓN 12: Con nieto - 1 foto destacada webp
     photos = getPhotos('conNieto');
     addPhotosToGlobal(photos);
     html += createSingleSlide(photos[0], getMessage('conNieto'), slideIndex);
     slideIndex++;
 
-    // SECCIÓN 13: Selfie familiar - 1 foto destacada
     photos = getPhotos('selfieFamiliar');
     addPhotosToGlobal(photos);
     html += createSingleSlide(photos[0], getMessage('selfieFamiliar'), slideIndex);
     slideIndex++;
 
-    // SECCIÓN 14: Quinceaños - 1 foto especial
     photos = getPhotos('quinceanos');
     addPhotosToGlobal(photos);
     html += createSingleSlide(photos[0], getMessage('quinceanos'), slideIndex);
     slideIndex++;
 
-    // SECCIÓN 15: Generaciones - 2 fotos
     photos = getPhotos('generaciones');
     addPhotosToGlobal(photos);
     html += createGridSlide(photos, getMessage('generaciones'), slideIndex, 'grid-2');
     slideIndex++;
 
-    // SECCIÓN 16: Última foto especial
     photos = getPhotos('ultimaFoto');
     addPhotosToGlobal(photos);
     html += createSingleSlide(photos[0], getMessage('ultimaFoto'), slideIndex);
     slideIndex++;
 
-    // Slide del versículo
     html += `
         <div class="slide verse-slide" data-slide="${slideIndex}" data-type="verse">
             <div class="verse-container">
@@ -228,7 +220,6 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // Slide "Por siempre en nuestros corazones"
     html += `
         <div class="slide final-slide" data-slide="${slideIndex}" data-type="final">
             <div class="final-portrait">
@@ -245,8 +236,6 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // Slide de galería - último slide (con lazy loading real)
-    // Usamos data-src en vez de src para evitar cargar todas las imágenes
     let galleryPhotosHtml = allPhotos.map((src, i) => `
         <div class="gallery-thumb" data-photo-src="${src}" data-photo-index="${i}">
             <img data-src="${src}" alt="Recuerdo ${i + 1}" loading="lazy">
@@ -270,7 +259,6 @@ function generateSlides() {
     `;
 
     container.innerHTML = html;
-
     return slideIndex + 1;
 }
 
@@ -322,30 +310,23 @@ function createAutoplayOverlay() {
     `;
     document.body.appendChild(overlay);
 
-    document.getElementById('autoplayBtn').addEventListener('click', () => {
-        overlay.classList.add('hidden');
-        setTimeout(() => {
-            overlay.remove();
-            // Iniciar elementos flotantes solo después de interacción
-            startFloatingElements();
-            startSlideshow();
-        }, 800);
-    });
+    const btn = document.getElementById('autoplayBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            overlay.classList.add('hidden');
+            setTimeout(function() {
+                overlay.remove();
+                startFloatingElements();
+                startSlideshow();
+            }, 800);
+        });
+    }
 }
 
-// ==================== DETECCIÓN MÓVIL ====================
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-
 // ==================== FLOATING ELEMENTS ====================
-const floatingContainer = document.getElementById('floatingElements');
-
-// Limitar elementos flotantes para evitar crashes en móvil
-const MAX_PETALS = isMobile ? 3 : 8;
-const MAX_BOKEHS = isMobile ? 5 : 15;
-let petalCount = 0;
-let bokehCount = 0;
-
 function createPetal() {
+    if (!floatingContainer) return;
+    const MAX_PETALS = isMobile ? 3 : 8;
     if (petalCount >= MAX_PETALS) return;
     petalCount++;
 
@@ -383,6 +364,8 @@ function createPetal() {
 }
 
 function createBokeh() {
+    if (!floatingContainer) return;
+    const MAX_BOKEHS = isMobile ? 5 : 15;
     if (bokehCount >= MAX_BOKEHS) return;
     bokehCount++;
 
@@ -421,72 +404,26 @@ function createBokeh() {
     animate();
 }
 
-// Variables para los intervalos (se inician después de interacción del usuario)
-let petalInterval = null;
-let bokehInterval = null;
-
 function startFloatingElements() {
-    if (petalInterval || bokehInterval) return; // Ya iniciados
-
-    // Intervalos más largos en móvil para ahorrar recursos
+    if (petalInterval || bokehInterval) return;
     petalInterval = setInterval(createPetal, isMobile ? 5000 : 2500);
     bokehInterval = setInterval(createBokeh, isMobile ? 2000 : 800);
 }
 
-// ==================== SLIDESHOW ====================
-let totalSlides, slides, progressBar, progressFill, progressTooltip;
-let currentSlideEl, totalSlidesEl, playBtn, hideBtn, controlsPanel, showControlsBtn;
-let bgMusic, muteBtn, lightbox, lightboxImg, lightboxClose, lightboxPrev, lightboxNext, lightboxCounter;
-
-try {
-    totalSlides = generateSlides();
-    slides = document.querySelectorAll('.slide');
-    progressBar = document.getElementById('progressBar');
-    progressFill = document.getElementById('progressFill');
-    progressTooltip = document.getElementById('progressTooltip');
-    currentSlideEl = document.getElementById('currentSlide');
-    totalSlidesEl = document.getElementById('totalSlides');
-    playBtn = document.getElementById('playBtn');
-    hideBtn = document.getElementById('hideBtn');
-    controlsPanel = document.getElementById('controlsPanel');
-    showControlsBtn = document.getElementById('showControlsBtn');
-    bgMusic = document.getElementById('bgMusic');
-    muteBtn = document.getElementById('muteBtn');
-
-    // Lightbox elements
-    lightbox = document.getElementById('lightbox');
-    lightboxImg = document.getElementById('lightboxImg');
-    lightboxClose = document.getElementById('lightboxClose');
-    lightboxPrev = document.getElementById('lightboxPrev');
-    lightboxNext = document.getElementById('lightboxNext');
-    lightboxCounter = document.getElementById('lightboxCounter');
-
-    if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
-} catch (e) {
-    console.error('Error inicializando slideshow:', e);
-}
-
-let currentSlide = 0;
-let isPlaying = false;
-let slideTimer = null;
-let audioTimeOnPause = 0; // Para sincronizar audio
-
-// Lightbox state
-let currentLightboxIndex = 0;
-let currentSlidePhotos = [];
-
-// ==================== DURACIONES ====================
+// ==================== SLIDE FUNCTIONS ====================
 function getSlideDuration(slideEl) {
+    if (!slideEl || !slideEl.dataset) return 12000;
     const type = slideEl.dataset.type;
     switch(type) {
         case 'intro': return 10000;
         case 'message': return 20000;
         case 'verse': return 18000;
         case 'final': return 25000;
-        case 'gallery': return 30000; // Más tiempo para la galería
+        case 'gallery': return 30000;
         case 'single': return 12000;
         case 'grid':
-            const gridClass = slideEl.querySelector('.photo-grid')?.className || '';
+            const grid = slideEl.querySelector('.photo-grid');
+            const gridClass = grid ? grid.className : '';
             if (gridClass.includes('grid-6')) return 18000;
             if (gridClass.includes('grid-4')) return 15000;
             if (gridClass.includes('grid-3')) return 14000;
@@ -496,15 +433,16 @@ function getSlideDuration(slideEl) {
     }
 }
 
-// ==================== SLIDE FUNCTIONS ====================
 function clearAllAnimations() {
-    document.querySelectorAll('.show').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.show').forEach(function(el) {
+        el.classList.remove('show');
+    });
 }
 
 function showSlide(index) {
     if (!slides || !slides.length) return;
 
-    slides.forEach(s => s.classList.remove('active'));
+    slides.forEach(function(s) { s.classList.remove('active'); });
     clearAllAnimations();
 
     if (slides[index]) {
@@ -513,55 +451,55 @@ function showSlide(index) {
     if (currentSlideEl) currentSlideEl.textContent = index + 1;
     if (progressFill) progressFill.style.width = ((index + 1) / totalSlides * 100) + '%';
 
-    setTimeout(() => animateSlide(index), 100);
+    setTimeout(function() { animateSlide(index); }, 100);
 }
 
 function animateSlide(index) {
     if (!slides || !slides[index]) return;
     const slide = slides[index];
-    const type = slide.dataset?.type;
+    const type = slide.dataset ? slide.dataset.type : null;
 
     if (type === 'intro') {
-        setTimeout(() => slide.querySelector('.intro-dove')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelector('.intro-memorial-text')?.classList.add('show'), 1200);
-        setTimeout(() => slide.querySelector('.intro-name')?.classList.add('show'), 2200);
-        setTimeout(() => slide.querySelector('.intro-dates')?.classList.add('show'), 3800);
-        setTimeout(() => slide.querySelector('.decorative-flowers')?.classList.add('show'), 5200);
+        setTimeout(function() { var el = slide.querySelector('.intro-dove'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var el = slide.querySelector('.intro-memorial-text'); if(el) el.classList.add('show'); }, 1200);
+        setTimeout(function() { var el = slide.querySelector('.intro-name'); if(el) el.classList.add('show'); }, 2200);
+        setTimeout(function() { var el = slide.querySelector('.intro-dates'); if(el) el.classList.add('show'); }, 3800);
+        setTimeout(function() { var el = slide.querySelector('.decorative-flowers'); if(el) el.classList.add('show'); }, 5200);
     }
     else if (type === 'message') {
-        setTimeout(() => slide.querySelector('.message-flower')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelectorAll('.message-line')[0]?.classList.add('show'), 1500);
-        setTimeout(() => slide.querySelectorAll('.message-line')[1]?.classList.add('show'), 5000);
-        setTimeout(() => slide.querySelector('.message-signature')?.classList.add('show'), 9000);
+        setTimeout(function() { var el = slide.querySelector('.message-flower'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var els = slide.querySelectorAll('.message-line'); if(els[0]) els[0].classList.add('show'); }, 1500);
+        setTimeout(function() { var els = slide.querySelectorAll('.message-line'); if(els[1]) els[1].classList.add('show'); }, 5000);
+        setTimeout(function() { var el = slide.querySelector('.message-signature'); if(el) el.classList.add('show'); }, 9000);
     }
     else if (type === 'verse') {
-        setTimeout(() => slide.querySelector('.verse-icon')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelector('.verse-text')?.classList.add('show'), 1500);
-        setTimeout(() => slide.querySelector('.verse-reference')?.classList.add('show'), 5000);
+        setTimeout(function() { var el = slide.querySelector('.verse-icon'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var el = slide.querySelector('.verse-text'); if(el) el.classList.add('show'); }, 1500);
+        setTimeout(function() { var el = slide.querySelector('.verse-reference'); if(el) el.classList.add('show'); }, 5000);
     }
     else if (type === 'final') {
-        setTimeout(() => slide.querySelector('.final-portrait')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelector('.final-eternal')?.classList.add('show'), 2500);
-        setTimeout(() => slide.querySelector('.final-name')?.classList.add('show'), 4500);
-        setTimeout(() => slide.querySelector('.final-dates')?.classList.add('show'), 6000);
-        setTimeout(() => slide.querySelector('.final-flowers')?.classList.add('show'), 7500);
+        setTimeout(function() { var el = slide.querySelector('.final-portrait'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var el = slide.querySelector('.final-eternal'); if(el) el.classList.add('show'); }, 2500);
+        setTimeout(function() { var el = slide.querySelector('.final-name'); if(el) el.classList.add('show'); }, 4500);
+        setTimeout(function() { var el = slide.querySelector('.final-dates'); if(el) el.classList.add('show'); }, 6000);
+        setTimeout(function() { var el = slide.querySelector('.final-flowers'); if(el) el.classList.add('show'); }, 7500);
     }
     else if (type === 'grid') {
         const photos = slide.querySelectorAll('.grid-photo');
-        photos.forEach((photo, i) => {
-            setTimeout(() => photo.classList.add('show'), 200 + (i * 200));
+        photos.forEach(function(photo, i) {
+            setTimeout(function() { photo.classList.add('show'); }, 200 + (i * 200));
         });
         const msgDelay = 200 + (photos.length * 200) + 500;
-        setTimeout(() => slide.querySelector('.photo-message')?.classList.add('show'), msgDelay);
+        setTimeout(function() { var el = slide.querySelector('.photo-message'); if(el) el.classList.add('show'); }, msgDelay);
     }
     else if (type === 'single') {
-        setTimeout(() => slide.querySelector('.photo-container')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelector('.photo-message')?.classList.add('show'), 1800);
+        setTimeout(function() { var el = slide.querySelector('.photo-container'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var el = slide.querySelector('.photo-message'); if(el) el.classList.add('show'); }, 1800);
     }
     else if (type === 'gallery') {
-        setTimeout(() => slide.querySelector('.gallery-header')?.classList.add('show'), 100);
-        setTimeout(() => slide.querySelector('.gallery-thumbs-container')?.classList.add('show'), 800);
-        setTimeout(() => slide.querySelector('.gallery-hint')?.classList.add('show'), 1500);
+        setTimeout(function() { var el = slide.querySelector('.gallery-header'); if(el) el.classList.add('show'); }, 100);
+        setTimeout(function() { var el = slide.querySelector('.gallery-thumbs-container'); if(el) el.classList.add('show'); }, 800);
+        setTimeout(function() { var el = slide.querySelector('.gallery-hint'); if(el) el.classList.add('show'); }, 1500);
     }
 }
 
@@ -586,17 +524,15 @@ function startSlideshow() {
     isPlaying = true;
     if (playBtn) playBtn.textContent = '⏸ PAUSAR';
 
-    // Si es reinicio, comenzar desde 0
     if (currentSlide === totalSlides - 1) {
         currentSlide = 0;
         audioTimeOnPause = 0;
     }
 
-    // Sincronizar audio - continuar desde donde se pausó
     if (bgMusic) {
         bgMusic.currentTime = audioTimeOnPause;
         bgMusic.volume = 1;
-        bgMusic.play().catch(e => console.log('Audio:', e));
+        bgMusic.play().catch(function(e) { console.log('Audio:', e); });
     }
 
     showSlide(currentSlide);
@@ -610,81 +546,47 @@ function pauseSlideshow() {
     if (playBtn) playBtn.textContent = '▶ CONTINUAR';
     clearTimeout(slideTimer);
 
-    // Guardar posición del audio para sincronización
     if (bgMusic) {
         audioTimeOnPause = bgMusic.currentTime;
         bgMusic.pause();
     }
 }
 
-// ==================== PROGRESS BAR INTERACTIVO ====================
-if (progressBar) {
-    progressBar.addEventListener('click', (e) => {
-        const rect = progressBar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        const targetSlide = Math.floor(percent * totalSlides);
-
-        // Pausar si está reproduciendo
-        if (isPlaying) {
-            pauseSlideshow();
-        }
-
-        // Navegar al slide
-        currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
-        showSlide(currentSlide);
-    });
-
-    progressBar.addEventListener('mousemove', (e) => {
-        const rect = progressBar.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        const targetSlide = Math.floor(percent * totalSlides) + 1;
-
-        if (progressTooltip) {
-            progressTooltip.textContent = `Slide ${Math.max(1, Math.min(targetSlide, totalSlides))}`;
-            progressTooltip.style.left = `${percent * 100}%`;
-        }
-    });
-}
-
 // ==================== LIGHTBOX ====================
 function openLightbox(photoSrc) {
-    // Pausar slideshow al abrir lightbox
-    if (isPlaying) {
-        pauseSlideshow();
-    }
+    if (isPlaying) pauseSlideshow();
 
-    // Obtener fotos del slide actual
     const activeSlide = document.querySelector('.slide.active');
     currentSlidePhotos = [];
 
-    // Si es el slide de galería, usar todas las fotos
-    if (activeSlide.dataset.type === 'gallery') {
-        currentSlidePhotos = [...allPhotos];
-    } else {
-        activeSlide.querySelectorAll('[data-photo-src]').forEach(el => {
+    if (activeSlide && activeSlide.dataset && activeSlide.dataset.type === 'gallery') {
+        currentSlidePhotos = allPhotos.slice();
+    } else if (activeSlide) {
+        activeSlide.querySelectorAll('[data-photo-src]').forEach(function(el) {
             currentSlidePhotos.push(el.dataset.photoSrc);
         });
     }
 
-    // Encontrar índice de la foto clickeada
     currentLightboxIndex = currentSlidePhotos.indexOf(photoSrc);
     if (currentLightboxIndex === -1) currentLightboxIndex = 0;
 
     updateLightboxImage();
-    lightbox.classList.add('active');
+    if (lightbox) lightbox.classList.add('active');
 }
 
 function closeLightbox() {
-    lightbox.classList.remove('active');
+    if (lightbox) lightbox.classList.remove('active');
 }
 
 function updateLightboxImage() {
-    lightboxImg.src = currentSlidePhotos[currentLightboxIndex];
-    lightboxCounter.textContent = `${currentLightboxIndex + 1} / ${currentSlidePhotos.length}`;
-
-    // Mostrar/ocultar navegación si solo hay una foto
-    lightboxPrev.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
-    lightboxNext.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
+    if (lightboxImg && currentSlidePhotos[currentLightboxIndex]) {
+        lightboxImg.src = currentSlidePhotos[currentLightboxIndex];
+    }
+    if (lightboxCounter) {
+        lightboxCounter.textContent = (currentLightboxIndex + 1) + ' / ' + currentSlidePhotos.length;
+    }
+    if (lightboxPrev) lightboxPrev.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
+    if (lightboxNext) lightboxNext.style.display = currentSlidePhotos.length > 1 ? 'block' : 'none';
 }
 
 function lightboxPrevPhoto() {
@@ -697,147 +599,7 @@ function lightboxNextPhoto() {
     updateLightboxImage();
 }
 
-// Lightbox event listeners
-if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
-if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevPhoto);
-if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextPhoto);
-
-if (lightbox) {
-    lightbox.addEventListener('click', (e) => {
-        // Cerrar solo si se hace click en el fondo oscuro
-        if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
-            closeLightbox();
-        }
-    });
-}
-
-// Click en fotos para abrir lightbox - usar event delegation en el container
-const slidesContainer = document.getElementById('slidesContainer');
-if (slidesContainer) {
-    slidesContainer.addEventListener('click', function(e) {
-        // Verificar si el lightbox ya está abierto
-        if (lightbox && lightbox.classList.contains('active')) {
-            return;
-        }
-
-    // Buscar si el click fue en una foto o dentro de una foto
-    const gridPhoto = e.target.closest('.grid-photo');
-    const photoInner = e.target.closest('.photo-inner');
-    const galleryThumb = e.target.closest('.gallery-thumb');
-
-    if (gridPhoto) {
-        const src = gridPhoto.getAttribute('data-photo-src');
-        if (src) {
-            e.preventDefault();
-            e.stopPropagation();
-            openLightbox(src);
-        }
-    } else if (photoInner) {
-        const src = photoInner.getAttribute('data-photo-src');
-        if (src) {
-            e.preventDefault();
-            e.stopPropagation();
-            openLightbox(src);
-        }
-    } else if (galleryThumb) {
-        const src = galleryThumb.getAttribute('data-photo-src');
-        if (src) {
-            e.preventDefault();
-            e.stopPropagation();
-            openLightbox(src);
-        }
-    }
-    });
-}
-
-// ==================== CONTROLES ====================
-if (playBtn) playBtn.onclick = () => isPlaying ? pauseSlideshow() : startSlideshow();
-
-if (hideBtn) {
-    hideBtn.onclick = () => {
-        if (controlsPanel) controlsPanel.classList.add('hidden');
-        if (showControlsBtn) showControlsBtn.classList.add('visible');
-    };
-}
-
-if (showControlsBtn) {
-    showControlsBtn.onclick = () => {
-        if (controlsPanel) controlsPanel.classList.remove('hidden');
-        showControlsBtn.classList.remove('visible');
-    };
-}
-
-if (muteBtn && bgMusic) {
-    muteBtn.onclick = () => {
-        bgMusic.muted = !bgMusic.muted;
-        muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
-    };
-}
-
-// ==================== KEYBOARD CONTROLS ====================
-document.onkeydown = (e) => {
-    // Si el lightbox está abierto
-    if (lightbox && lightbox.classList.contains('active')) {
-        if (e.code === 'Escape') closeLightbox();
-        if (e.code === 'ArrowLeft') lightboxPrevPhoto();
-        if (e.code === 'ArrowRight') lightboxNextPhoto();
-        return;
-    }
-
-    if (e.code === 'Space') {
-        e.preventDefault();
-        isPlaying ? pauseSlideshow() : startSlideshow();
-    }
-    if (e.code === 'ArrowRight') {
-        if (isPlaying) pauseSlideshow();
-        currentSlide = Math.min(currentSlide + 1, totalSlides - 1);
-        showSlide(currentSlide);
-    }
-    if (e.code === 'ArrowLeft') {
-        if (isPlaying) pauseSlideshow();
-        currentSlide = Math.max(currentSlide - 1, 0);
-        showSlide(currentSlide);
-    }
-    if (e.code === 'KeyH') {
-        if (controlsPanel) controlsPanel.classList.toggle('hidden');
-        if (showControlsBtn) showControlsBtn.classList.toggle('visible');
-    }
-    if (e.code === 'KeyF') {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
-    }
-    if (e.code === 'Escape') {
-        if (controlsPanel && controlsPanel.classList.contains('hidden')) {
-            controlsPanel.classList.remove('hidden');
-            if (showControlsBtn) showControlsBtn.classList.remove('visible');
-        }
-    }
-};
-
-// ==================== AUDIO ====================
-if (bgMusic) {
-    bgMusic.ontimeupdate = () => {
-        // Fade out music near end
-        if (bgMusic.duration - bgMusic.currentTime < 5) {
-            bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
-        }
-    };
-
-    // Loop audio si termina antes que el slideshow
-    bgMusic.onended = () => {
-        if (isPlaying) {
-            bgMusic.currentTime = 0;
-            bgMusic.play();
-        }
-    };
-}
-
 // ==================== LAZY LOADING GALERÍA ====================
-let galleryLoaded = false;
-
 function loadGalleryImages() {
     if (galleryLoaded) return;
     galleryLoaded = true;
@@ -847,10 +609,9 @@ function loadGalleryImages() {
 
     const images = galleryThumbs.querySelectorAll('img[data-src]');
 
-    // En móvil, cargar de forma más gradual
     if (isMobile) {
         let index = 0;
-        const loadNext = () => {
+        const loadNext = function() {
             if (index < images.length) {
                 const img = images[index];
                 if (img && img.dataset && img.dataset.src) {
@@ -858,14 +619,12 @@ function loadGalleryImages() {
                     img.removeAttribute('data-src');
                 }
                 index++;
-                // Cargar siguiente imagen después de un pequeño delay
                 setTimeout(loadNext, 100);
             }
         };
         loadNext();
     } else {
-        // En desktop, cargar todas
-        images.forEach(img => {
+        images.forEach(function(img) {
             if (img && img.dataset && img.dataset.src) {
                 img.src = img.dataset.src;
                 img.removeAttribute('data-src');
@@ -874,44 +633,214 @@ function loadGalleryImages() {
     }
 }
 
-// Observar cuando el slide de galería se vuelve visible - con fallback para navegadores antiguos
-try {
-    if ('IntersectionObserver' in window) {
-        const galleryObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    loadGalleryImages();
-                    galleryObserver.disconnect();
-                }
-            });
-        }, { threshold: 0.1 });
-
-        // Observar el slide de galería
-        const gallerySlide = document.querySelector('.gallery-slide');
-        if (gallerySlide) {
-            galleryObserver.observe(gallerySlide);
-        }
-    }
-} catch (e) {
-    console.log('IntersectionObserver no disponible');
-}
-
 // ==================== INICIALIZACIÓN ====================
 function init() {
     try {
-        // Mostrar primer slide (con verificación)
+        // Detección móvil
+        isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        // Generar slides
+        totalSlides = generateSlides();
+        slides = document.querySelectorAll('.slide');
+
+        // Obtener elementos del DOM
+        floatingContainer = document.getElementById('floatingElements');
+        progressBar = document.getElementById('progressBar');
+        progressFill = document.getElementById('progressFill');
+        progressTooltip = document.getElementById('progressTooltip');
+        currentSlideEl = document.getElementById('currentSlide');
+        totalSlidesEl = document.getElementById('totalSlides');
+        playBtn = document.getElementById('playBtn');
+        hideBtn = document.getElementById('hideBtn');
+        controlsPanel = document.getElementById('controlsPanel');
+        showControlsBtn = document.getElementById('showControlsBtn');
+        bgMusic = document.getElementById('bgMusic');
+        muteBtn = document.getElementById('muteBtn');
+        lightbox = document.getElementById('lightbox');
+        lightboxImg = document.getElementById('lightboxImg');
+        lightboxClose = document.getElementById('lightboxClose');
+        lightboxPrev = document.getElementById('lightboxPrev');
+        lightboxNext = document.getElementById('lightboxNext');
+        lightboxCounter = document.getElementById('lightboxCounter');
+        slidesContainer = document.getElementById('slidesContainer');
+
+        if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
+
+        // Mostrar primer slide
         if (slides && slides.length > 0) {
             slides[0].classList.add('active');
         }
 
+        // Event listeners
+        if (progressBar) {
+            progressBar.addEventListener('click', function(e) {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                const targetSlide = Math.floor(percent * totalSlides);
+                if (isPlaying) pauseSlideshow();
+                currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
+                showSlide(currentSlide);
+            });
+
+            progressBar.addEventListener('mousemove', function(e) {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                const targetSlide = Math.floor(percent * totalSlides) + 1;
+                if (progressTooltip) {
+                    progressTooltip.textContent = 'Slide ' + Math.max(1, Math.min(targetSlide, totalSlides));
+                    progressTooltip.style.left = (percent * 100) + '%';
+                }
+            });
+        }
+
+        if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+        if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevPhoto);
+        if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextPhoto);
+
+        if (lightbox) {
+            lightbox.addEventListener('click', function(e) {
+                if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
+                    closeLightbox();
+                }
+            });
+        }
+
+        if (slidesContainer) {
+            slidesContainer.addEventListener('click', function(e) {
+                if (lightbox && lightbox.classList.contains('active')) return;
+
+                const gridPhoto = e.target.closest('.grid-photo');
+                const photoInner = e.target.closest('.photo-inner');
+                const galleryThumb = e.target.closest('.gallery-thumb');
+
+                var src = null;
+                if (gridPhoto) src = gridPhoto.getAttribute('data-photo-src');
+                else if (photoInner) src = photoInner.getAttribute('data-photo-src');
+                else if (galleryThumb) src = galleryThumb.getAttribute('data-photo-src');
+
+                if (src) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openLightbox(src);
+                }
+            });
+        }
+
+        if (playBtn) {
+            playBtn.onclick = function() {
+                if (isPlaying) pauseSlideshow();
+                else startSlideshow();
+            };
+        }
+
+        if (hideBtn) {
+            hideBtn.onclick = function() {
+                if (controlsPanel) controlsPanel.classList.add('hidden');
+                if (showControlsBtn) showControlsBtn.classList.add('visible');
+            };
+        }
+
+        if (showControlsBtn) {
+            showControlsBtn.onclick = function() {
+                if (controlsPanel) controlsPanel.classList.remove('hidden');
+                showControlsBtn.classList.remove('visible');
+            };
+        }
+
+        if (muteBtn && bgMusic) {
+            muteBtn.onclick = function() {
+                bgMusic.muted = !bgMusic.muted;
+                muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
+            };
+        }
+
+        document.onkeydown = function(e) {
+            if (lightbox && lightbox.classList.contains('active')) {
+                if (e.code === 'Escape') closeLightbox();
+                if (e.code === 'ArrowLeft') lightboxPrevPhoto();
+                if (e.code === 'ArrowRight') lightboxNextPhoto();
+                return;
+            }
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isPlaying) pauseSlideshow();
+                else startSlideshow();
+            }
+            if (e.code === 'ArrowRight') {
+                if (isPlaying) pauseSlideshow();
+                currentSlide = Math.min(currentSlide + 1, totalSlides - 1);
+                showSlide(currentSlide);
+            }
+            if (e.code === 'ArrowLeft') {
+                if (isPlaying) pauseSlideshow();
+                currentSlide = Math.max(currentSlide - 1, 0);
+                showSlide(currentSlide);
+            }
+            if (e.code === 'KeyH') {
+                if (controlsPanel) controlsPanel.classList.toggle('hidden');
+                if (showControlsBtn) showControlsBtn.classList.toggle('visible');
+            }
+            if (e.code === 'KeyF') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen().catch(function() {});
+                }
+            }
+            if (e.code === 'Escape') {
+                if (controlsPanel && controlsPanel.classList.contains('hidden')) {
+                    controlsPanel.classList.remove('hidden');
+                    if (showControlsBtn) showControlsBtn.classList.remove('visible');
+                }
+            }
+        };
+
+        if (bgMusic) {
+            bgMusic.ontimeupdate = function() {
+                if (bgMusic.duration - bgMusic.currentTime < 5) {
+                    bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
+                }
+            };
+
+            bgMusic.onended = function() {
+                if (isPlaying) {
+                    bgMusic.currentTime = 0;
+                    bgMusic.play();
+                }
+            };
+        }
+
+        // IntersectionObserver para galería
+        if ('IntersectionObserver' in window) {
+            try {
+                const galleryObserver = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            loadGalleryImages();
+                            galleryObserver.disconnect();
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                const gallerySlide = document.querySelector('.gallery-slide');
+                if (gallerySlide) {
+                    galleryObserver.observe(gallerySlide);
+                }
+            } catch (e) {
+                console.log('IntersectionObserver error');
+            }
+        }
+
         // Crear overlay de autoplay
         createAutoplayOverlay();
+
     } catch (e) {
         console.error('Error en inicialización:', e);
     }
 }
 
-// Ejecutar inicialización
+// Ejecutar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
