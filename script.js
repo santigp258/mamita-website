@@ -79,7 +79,7 @@ var petalInterval = null;
 var bokehInterval = null;
 var petalCount = 0;
 var bokehCount = 0;
-var galleryLoaded = false;
+// galleryLoaded eliminado - lazy loading en showSlide
 var isMobile = false;
 var appInitialized = false;
 
@@ -156,7 +156,7 @@ function initializeApp() {
 
             if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
 
-            // Mostrar primer slide
+            // Mostrar primer slide (sin imágenes, es el intro)
             if (slides && slides.length > 0) {
                 slides[0].classList.add('active');
             }
@@ -285,11 +285,11 @@ function generateSlides() {
     h.push('</div></div>');
     slideIndex++;
 
-    // Final
+    // Final - también con lazy loading
     var mainPhoto = asset("main_photo.jpg");
     h.push('<div class="slide final-slide" data-slide="' + slideIndex + '" data-type="final">');
     h.push('<div class="final-portrait"><div class="portrait-glow"></div>');
-    h.push('<div class="portrait-frame"><img src="' + mainPhoto + '" alt="Ana del Carmen Pulgarín"></div></div>');
+    h.push('<div class="portrait-frame"><img data-src="' + mainPhoto + '" alt="Ana del Carmen Pulgarín"></div></div>');
     h.push('<div class="final-eternal">Por siempre en nuestros corazones</div>');
     h.push('<div class="final-name">Ana del Carmen Pulgarín</div>');
     h.push('<div class="final-dates">1956 ♡ 2026</div>');
@@ -321,8 +321,9 @@ function generateSlides() {
 function createGridSlide(photos, message, index, gridType) {
     var photosHtml = '';
     for (var i = 0; i < photos.length; i++) {
+        // Usar data-src en vez de src para lazy loading
         photosHtml += '<div class="grid-photo" style="--delay: ' + (i * 0.15) + 's" data-photo-src="' + photos[i] + '">' +
-            '<img src="' + photos[i] + '" alt="Recuerdo ' + (i + 1) + '">' +
+            '<img data-src="' + photos[i] + '" alt="Recuerdo ' + (i + 1) + '">' +
         '</div>';
     }
 
@@ -335,11 +336,12 @@ function createGridSlide(photos, message, index, gridType) {
 }
 
 function createSingleSlide(src, message, index) {
+    // Usar data-src en vez de src para lazy loading
     return '<div class="slide photo-slide single-slide" data-slide="' + index + '" data-type="single">' +
             '<div class="photo-wrapper">' +
                 '<div class="photo-container">' +
                     '<div class="photo-frame"><div class="photo-inner" data-photo-src="' + src + '">' +
-                        '<img src="' + src + '" alt="Recuerdo">' +
+                        '<img data-src="' + src + '" alt="Recuerdo">' +
                     '</div></div>' +
                 '</div>' +
                 '<div class="photo-message">' + message + '</div>' +
@@ -488,26 +490,7 @@ function setupEventListeners() {
         };
     }
 
-    // IntersectionObserver para galería
-    if ('IntersectionObserver' in window) {
-        try {
-            var galleryObserver = new IntersectionObserver(function(entries) {
-                for (var i = 0; i < entries.length; i++) {
-                    if (entries[i].isIntersecting) {
-                        loadGalleryImages();
-                        galleryObserver.disconnect();
-                    }
-                }
-            }, { threshold: 0.1 });
-
-            var gallerySlide = document.querySelector('.gallery-slide');
-            if (gallerySlide) {
-                galleryObserver.observe(gallerySlide);
-            }
-        } catch (e) {
-            console.log('IntersectionObserver error');
-        }
-    }
+    // NO usar IntersectionObserver - las imágenes se cargan en showSlide
 }
 
 // ==================== FLOATING ELEMENTS ====================
@@ -627,6 +610,41 @@ function clearAllAnimations() {
     }
 }
 
+// Cargar UNA imagen con delay
+function loadSingleImage(img) {
+    if (img && img.dataset && img.dataset.src) {
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+    }
+}
+
+// Cargar imágenes de un slide de forma gradual (una por una)
+function loadSlideImages(slide, callback) {
+    if (!slide) {
+        if (callback) callback();
+        return;
+    }
+
+    var images = slide.querySelectorAll('img[data-src]');
+    if (images.length === 0) {
+        if (callback) callback();
+        return;
+    }
+
+    var index = 0;
+    function loadNext() {
+        if (index < images.length) {
+            loadSingleImage(images[index]);
+            index++;
+            // Cargar siguiente imagen después de 50ms
+            setTimeout(loadNext, 50);
+        } else {
+            if (callback) callback();
+        }
+    }
+    loadNext();
+}
+
 function showSlide(index) {
     if (!slides || !slides.length) return;
 
@@ -637,6 +655,8 @@ function showSlide(index) {
 
     if (slides[index]) {
         slides[index].classList.add('active');
+        // Cargar imágenes del slide actual de forma gradual
+        loadSlideImages(slides[index]);
     }
     if (currentSlideEl) currentSlideEl.textContent = index + 1;
     if (progressFill) progressFill.style.width = ((index + 1) / totalSlides * 100) + '%';
@@ -802,40 +822,7 @@ function lightboxNextPhoto() {
     updateLightboxImage();
 }
 
-// ==================== LAZY LOADING GALERÍA ====================
-function loadGalleryImages() {
-    if (galleryLoaded) return;
-    galleryLoaded = true;
-
-    var galleryThumbs = document.getElementById('galleryThumbs');
-    if (!galleryThumbs) return;
-
-    var images = galleryThumbs.querySelectorAll('img[data-src]');
-
-    if (isMobile) {
-        var index = 0;
-        function loadNext() {
-            if (index < images.length) {
-                var img = images[index];
-                if (img && img.dataset && img.dataset.src) {
-                    img.src = img.dataset.src;
-                    img.removeAttribute('data-src');
-                }
-                index++;
-                setTimeout(loadNext, 100);
-            }
-        }
-        loadNext();
-    } else {
-        for (var i = 0; i < images.length; i++) {
-            var img = images[i];
-            if (img && img.dataset && img.dataset.src) {
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-            }
-        }
-    }
-}
+// Lazy loading se maneja en loadSlideImages()
 
 // ==================== PUNTO DE ENTRADA ====================
 // SOLO mostrar el overlay inicial cuando el DOM esté listo
