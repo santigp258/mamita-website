@@ -681,35 +681,46 @@ body {
         height: calc((62vh - 50px - 16px) / 3);
     }
 
+    /* Grid-4 en móvil: mantener 2x2 pero más grande */
     .grid-4 {
-        max-width: 92vw;
-        max-height: 58vh;
+        max-width: 94vw;
+        max-height: 65vh;
+        gap: 6px;
     }
 
     .grid-4 .grid-photo {
-        height: calc((58vh - 40px - 10px) / 2);
+        height: calc((65vh - 35px - 6px) / 2);
     }
 
+    /* Grid-3 en móvil: 1 foto grande arriba, 2 pequeñas abajo */
     .grid-3 {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(3, 1fr);
-        max-width: 88vw;
-        max-height: 65vh;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: 2fr 1fr;
+        max-width: 90vw;
+        max-height: 68vh;
     }
 
-    .grid-3 .grid-photo {
-        height: calc((65vh - 50px - 16px) / 3);
+    .grid-3 .grid-photo:first-child {
+        grid-column: 1 / -1; /* Ocupa todo el ancho */
+        height: calc(68vh * 0.55);
     }
 
+    .grid-3 .grid-photo:nth-child(2),
+    .grid-3 .grid-photo:nth-child(3) {
+        height: calc(68vh * 0.28);
+    }
+
+    /* Grid-2 en móvil: 2 fotos apiladas más grandes */
     .grid-2 {
         grid-template-columns: 1fr;
         grid-template-rows: repeat(2, 1fr);
-        max-width: 88vw;
-        max-height: 60vh;
+        max-width: 92vw;
+        max-height: 70vh;
+        gap: 6px;
     }
 
     .grid-2 .grid-photo {
-        height: calc((60vh - 40px - 10px) / 2);
+        height: calc((70vh - 35px - 6px) / 2);
     }
 
     .photo-grid {
@@ -739,15 +750,21 @@ body {
     }
 
     .grid-4 .grid-photo {
-        height: calc((55vh - 35px - 8px) / 2);
+        height: calc((62vh - 30px - 6px) / 2);
     }
 
-    .grid-3 .grid-photo {
-        height: calc((62vh - 45px - 12px) / 3);
+    /* Grid-3 en móvil pequeño: mantener el collage */
+    .grid-3 .grid-photo:first-child {
+        height: calc(62vh * 0.52);
+    }
+
+    .grid-3 .grid-photo:nth-child(2),
+    .grid-3 .grid-photo:nth-child(3) {
+        height: calc(62vh * 0.26);
     }
 
     .grid-2 .grid-photo {
-        height: calc((58vh - 35px - 8px) / 2);
+        height: calc((68vh - 30px - 6px) / 2);
     }
 
     .photo-grid {
