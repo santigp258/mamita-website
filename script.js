@@ -14,160 +14,54 @@ window.addEventListener('unhandledrejection', function(event) {
 // CDN de Cloudinary
 const CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
 
-// Helper para construir URLs con CDN
+// Helper para construir URLs con CDN (lazy - solo genera string cuando se llama)
 const asset = (path) => CDN_BASE + path;
 
 // ==================== CONFIGURACIÓN DE FOTOS ====================
-// Organizado por categorías basadas en el análisis visual
+// Solo almacenamos los nombres de archivo, no las URLs completas
+// Las URLs se generan bajo demanda para reducir memoria inicial
 
-const photoCategories = {
-    // Celebración cumpleaños 50 de su hija - Fotos grupales con familia
-    cumpleanos50: {
-        photos: [
-            asset("foto_01.jpg"),
-            asset("foto_02.jpg"),
-            asset("foto_03.jpg"),
-            asset("foto_04.jpg"),
-            asset("foto_05.jpg"),
-            asset("foto_06.jpg")
-        ],
-        message: "Siempre celebrando a tus hijos, nietos y toda tu familia"
-    },
-    // Comiendo en familia
-    momentosFamilia: {
-        photos: [
-            asset("foto_07.jpg"),
-            asset("foto_08.jpg"),
-            asset("foto_12.jpg"),
-            asset("foto_13.jpg")
-        ],
-        message: "Los momentos más simples eran los más especiales"
-    },
-    // En la tienda leyendo
-    vidaCotidiana: {
-        photos: [
-            asset("foto_09.jpg"),
-            asset("foto_10.jpg"),
-            asset("foto_11.jpg")
-        ],
-        message: "Trabajadora incansable, siempre atenta a todo"
-    },
-    // Día de las Madres - secuencia cortando pastel
-    diaMadres: {
-        photos: [
-            asset("foto_14.jpg"),
-            asset("foto_15.jpg"),
-            asset("foto_16.jpg"),
-            asset("foto_17.jpg"),
-            asset("foto_18.jpg"),
-            asset("foto_19.jpg"),
-            asset("foto_20.jpg"),
-            asset("foto_21.jpg"),
-            asset("foto_22.jpg"),
-            asset("foto_23.jpg"),
-            asset("foto_24.jpg"),
-            asset("foto_25.jpg")
-        ],
-        message: "Feliz Día de las Madres - Tu alegría era contagiosa"
-    },
-    // En casa sentada, momentos tranquilos
-    momentosTranquilos: {
-        photos: [
-            asset("foto_26.jpg"),
-            asset("foto_27.jpg"),
-            asset("foto_28.jpg"),
-            asset("foto_29.jpg")
-        ],
-        message: "En tu hogar siempre hubo paz y amor"
-    },
-    // Cumpleaños con hija - abrazos
-    cumpleanosHija: {
-        photos: [
-            asset("foto_30.jpg"),
-            asset("foto_31.jpg")
-        ],
-        message: "Tu abrazo era el refugio más seguro"
-    },
-    // Besos con hija/nieta
-    besosHijosNietos: {
-        photos: [
-            asset("foto_32.jpg"),
-            asset("foto_33.jpg"),
-            asset("foto_34.jpg")
-        ],
-        message: "Tus besos y cariño para hijos y nietos, amor eterno"
-    },
-    // Sentada en sofá rojo - paz
-    momentosPaz: {
-        photos: [
-            asset("foto_35.jpg")
-        ],
-        message: "Tu paz interior reflejaba tu fe inquebrantable"
-    },
-    // Más cumpleaños/celebraciones
-    celebraciones: {
-        photos: [
-            asset("foto_36.jpg"),
-            asset("foto_37.jpg"),
-            asset("foto_38.jpg")
-        ],
-        message: "Cada celebración era una bendición"
-    },
-    // Reuniones familiares - fotos webp
-    reunionesFamiliares: {
-        photos: [
-            asset("photo_1.jpg"),
-            asset("photo_2.jpg"),
-            asset("photo_4.jpg"),
-            asset("photo_8.jpg")
-        ],
-        message: "Reunida con toda la familia, el mejor regalo"
-    },
-    // Familia completa al aire libre
-    familiaCompleta: {
-        photos: [
-            asset("photo_3.jpg"),
-            asset("photo_7.jpg")
-        ],
-        message: "Rodeada de hijos, nietos y toda tu descendencia"
-    },
-    // Con nieto
-    conNieto: {
-        photos: [
-            asset("photo_9.jpg")
-        ],
-        message: "El amor de abuela, incondicional y eterno"
-    },
-    // Selfie familiar - cumpleaños
-    selfieFamiliar: {
-        photos: [
-            asset("foto_39.jpg")
-        ],
-        message: "Toda la familia unida, tu mayor alegría"
-    },
-    // Quinceaños - recuerdo especial
-    quinceanos: {
-        photos: [
-            asset("foto_40.jpg")
-        ],
-        message: "Presente en cada momento especial de tus nietas"
-    },
-    // Con hijas, nietas y bisnieta
-    generaciones: {
-        photos: [
-            asset("foto_41.jpg"),
-            asset("foto_42.jpg")
-        ],
-        message: "Tres generaciones unidas por tu amor"
-    },
-    // Última foto especial
-    ultimaFoto: {
-        photos: [
-            asset("ultima.jpeg")
-        ],
-        message: "Hasta siempre, mamita querida"
-    }
+const photoNames = {
+    cumpleanos50: ["foto_01.jpg", "foto_02.jpg", "foto_03.jpg", "foto_04.jpg", "foto_05.jpg", "foto_06.jpg"],
+    momentosFamilia: ["foto_07.jpg", "foto_08.jpg", "foto_12.jpg", "foto_13.jpg"],
+    vidaCotidiana: ["foto_09.jpg", "foto_10.jpg", "foto_11.jpg"],
+    diaMadres: ["foto_14.jpg", "foto_15.jpg", "foto_16.jpg", "foto_17.jpg", "foto_18.jpg", "foto_19.jpg", "foto_20.jpg", "foto_21.jpg", "foto_22.jpg", "foto_23.jpg", "foto_24.jpg", "foto_25.jpg"],
+    momentosTranquilos: ["foto_26.jpg", "foto_27.jpg", "foto_28.jpg", "foto_29.jpg"],
+    cumpleanosHija: ["foto_30.jpg", "foto_31.jpg"],
+    besosHijosNietos: ["foto_32.jpg", "foto_33.jpg", "foto_34.jpg"],
+    momentosPaz: ["foto_35.jpg"],
+    celebraciones: ["foto_36.jpg", "foto_37.jpg", "foto_38.jpg"],
+    reunionesFamiliares: ["photo_1.jpg", "photo_2.jpg", "photo_4.jpg", "photo_8.jpg"],
+    familiaCompleta: ["photo_3.jpg", "photo_7.jpg"],
+    conNieto: ["photo_9.jpg"],
+    selfieFamiliar: ["foto_39.jpg"],
+    quinceanos: ["foto_40.jpg"],
+    generaciones: ["foto_41.jpg", "foto_42.jpg"],
+    ultimaFoto: ["ultima.jpeg"]
 };
+
+const photoMessages = {
+    cumpleanos50: "Siempre celebrando a tus hijos, nietos y toda tu familia",
+    momentosFamilia: "Los momentos más simples eran los más especiales",
+    vidaCotidiana: "Trabajadora incansable, siempre atenta a todo",
+    diaMadres: "Feliz Día de las Madres - Tu alegría era contagiosa",
+    momentosTranquilos: "En tu hogar siempre hubo paz y amor",
+    cumpleanosHija: "Tu abrazo era el refugio más seguro",
+    besosHijosNietos: "Tus besos y cariño para hijos y nietos, amor eterno",
+    momentosPaz: "Tu paz interior reflejaba tu fe inquebrantable",
+    celebraciones: "Cada celebración era una bendición",
+    reunionesFamiliares: "Reunida con toda la familia, el mejor regalo",
+    familiaCompleta: "Rodeada de hijos, nietos y toda tu descendencia",
+    conNieto: "El amor de abuela, incondicional y eterno",
+    selfieFamiliar: "Toda la familia unida, tu mayor alegría",
+    quinceanos: "Presente en cada momento especial de tus nietas",
+    generaciones: "Tres generaciones unidas por tu amor",
+    ultimaFoto: "Hasta siempre, mamita querida"
+};
+
+// Helper para obtener fotos de una categoría (genera URLs bajo demanda)
+const getPhotos = (category) => photoNames[category].map(name => asset(name));
+const getMessage = (category) => photoMessages[category];
 
 // Foto principal para el slide final
 const mainPhoto = asset("main_photo.jpg");
@@ -207,30 +101,34 @@ function generateSlides() {
     }
 
     // SECCIÓN 1: Cumpleaños 50 - Grid de 6 fotos (2x3)
-    addPhotosToGlobal(photoCategories.cumpleanos50.photos);
-    html += createGridSlide(photoCategories.cumpleanos50.photos, photoCategories.cumpleanos50.message, slideIndex, 'grid-6');
+    let photos = getPhotos('cumpleanos50');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('cumpleanos50'), slideIndex, 'grid-6');
     slideIndex++;
 
     // SECCIÓN 2: Momentos en familia - Grid de 4 fotos (2x2)
-    addPhotosToGlobal(photoCategories.momentosFamilia.photos);
-    html += createGridSlide(photoCategories.momentosFamilia.photos, photoCategories.momentosFamilia.message, slideIndex, 'grid-4');
+    photos = getPhotos('momentosFamilia');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('momentosFamilia'), slideIndex, 'grid-4');
     slideIndex++;
 
     // SECCIÓN 3: Vida cotidiana - 3 fotos horizontal
-    addPhotosToGlobal(photoCategories.vidaCotidiana.photos);
-    html += createGridSlide(photoCategories.vidaCotidiana.photos, photoCategories.vidaCotidiana.message, slideIndex, 'grid-3');
+    photos = getPhotos('vidaCotidiana');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('vidaCotidiana'), slideIndex, 'grid-3');
     slideIndex++;
 
     // SECCIÓN 4: Día de las Madres - Collage grande (12 fotos en 2 slides)
-    const diaMadresFirst = photoCategories.diaMadres.photos.slice(0, 6);
-    const diaMadresSecond = photoCategories.diaMadres.photos.slice(6);
+    const diaMadresAll = getPhotos('diaMadres');
+    const diaMadresFirst = diaMadresAll.slice(0, 6);
+    const diaMadresSecond = diaMadresAll.slice(6);
 
     addPhotosToGlobal(diaMadresFirst);
     html += createGridSlide(diaMadresFirst, "Día de las Madres - Tu sonrisa lo iluminaba todo", slideIndex, 'grid-6');
     slideIndex++;
 
     addPhotosToGlobal(diaMadresSecond);
-    html += createGridSlide(diaMadresSecond, photoCategories.diaMadres.message, slideIndex, 'grid-6');
+    html += createGridSlide(diaMadresSecond, getMessage('diaMadres'), slideIndex, 'grid-6');
     slideIndex++;
 
     // Slide de mensaje/dedicatoria (mitad del slideshow)
@@ -247,63 +145,75 @@ function generateSlides() {
     slideIndex++;
 
     // SECCIÓN 5: Momentos tranquilos - 4 fotos
-    addPhotosToGlobal(photoCategories.momentosTranquilos.photos);
-    html += createGridSlide(photoCategories.momentosTranquilos.photos, photoCategories.momentosTranquilos.message, slideIndex, 'grid-4');
+    photos = getPhotos('momentosTranquilos');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('momentosTranquilos'), slideIndex, 'grid-4');
     slideIndex++;
 
     // SECCIÓN 6: Cumpleaños con hija - 2 fotos lado a lado
-    addPhotosToGlobal(photoCategories.cumpleanosHija.photos);
-    html += createGridSlide(photoCategories.cumpleanosHija.photos, photoCategories.cumpleanosHija.message, slideIndex, 'grid-2');
+    photos = getPhotos('cumpleanosHija');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('cumpleanosHija'), slideIndex, 'grid-2');
     slideIndex++;
 
     // SECCIÓN 7: Besos con hijos/nietos - 3 fotos
-    addPhotosToGlobal(photoCategories.besosHijosNietos.photos);
-    html += createGridSlide(photoCategories.besosHijosNietos.photos, photoCategories.besosHijosNietos.message, slideIndex, 'grid-3');
+    photos = getPhotos('besosHijosNietos');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('besosHijosNietos'), slideIndex, 'grid-3');
     slideIndex++;
 
     // SECCIÓN 8: Momento de paz - 1 foto destacada
-    addPhotosToGlobal(photoCategories.momentosPaz.photos);
-    html += createSingleSlide(photoCategories.momentosPaz.photos[0], photoCategories.momentosPaz.message, slideIndex);
+    photos = getPhotos('momentosPaz');
+    addPhotosToGlobal(photos);
+    html += createSingleSlide(photos[0], getMessage('momentosPaz'), slideIndex);
     slideIndex++;
 
     // SECCIÓN 9: Más celebraciones - 3 fotos
-    addPhotosToGlobal(photoCategories.celebraciones.photos);
-    html += createGridSlide(photoCategories.celebraciones.photos, photoCategories.celebraciones.message, slideIndex, 'grid-3');
+    photos = getPhotos('celebraciones');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('celebraciones'), slideIndex, 'grid-3');
     slideIndex++;
 
     // SECCIÓN 10: Reuniones familiares - 4 fotos webp
-    addPhotosToGlobal(photoCategories.reunionesFamiliares.photos);
-    html += createGridSlide(photoCategories.reunionesFamiliares.photos, photoCategories.reunionesFamiliares.message, slideIndex, 'grid-4');
+    photos = getPhotos('reunionesFamiliares');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('reunionesFamiliares'), slideIndex, 'grid-4');
     slideIndex++;
 
     // SECCIÓN 11: Familia completa al aire libre - 2 fotos webp
-    addPhotosToGlobal(photoCategories.familiaCompleta.photos);
-    html += createGridSlide(photoCategories.familiaCompleta.photos, photoCategories.familiaCompleta.message, slideIndex, 'grid-2');
+    photos = getPhotos('familiaCompleta');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('familiaCompleta'), slideIndex, 'grid-2');
     slideIndex++;
 
     // SECCIÓN 12: Con nieto - 1 foto destacada webp
-    addPhotosToGlobal(photoCategories.conNieto.photos);
-    html += createSingleSlide(photoCategories.conNieto.photos[0], photoCategories.conNieto.message, slideIndex);
+    photos = getPhotos('conNieto');
+    addPhotosToGlobal(photos);
+    html += createSingleSlide(photos[0], getMessage('conNieto'), slideIndex);
     slideIndex++;
 
     // SECCIÓN 13: Selfie familiar - 1 foto destacada
-    addPhotosToGlobal(photoCategories.selfieFamiliar.photos);
-    html += createSingleSlide(photoCategories.selfieFamiliar.photos[0], photoCategories.selfieFamiliar.message, slideIndex);
+    photos = getPhotos('selfieFamiliar');
+    addPhotosToGlobal(photos);
+    html += createSingleSlide(photos[0], getMessage('selfieFamiliar'), slideIndex);
     slideIndex++;
 
     // SECCIÓN 14: Quinceaños - 1 foto especial
-    addPhotosToGlobal(photoCategories.quinceanos.photos);
-    html += createSingleSlide(photoCategories.quinceanos.photos[0], photoCategories.quinceanos.message, slideIndex);
+    photos = getPhotos('quinceanos');
+    addPhotosToGlobal(photos);
+    html += createSingleSlide(photos[0], getMessage('quinceanos'), slideIndex);
     slideIndex++;
 
     // SECCIÓN 15: Generaciones - 2 fotos
-    addPhotosToGlobal(photoCategories.generaciones.photos);
-    html += createGridSlide(photoCategories.generaciones.photos, photoCategories.generaciones.message, slideIndex, 'grid-2');
+    photos = getPhotos('generaciones');
+    addPhotosToGlobal(photos);
+    html += createGridSlide(photos, getMessage('generaciones'), slideIndex, 'grid-2');
     slideIndex++;
 
     // SECCIÓN 16: Última foto especial
-    addPhotosToGlobal(photoCategories.ultimaFoto.photos);
-    html += createSingleSlide(photoCategories.ultimaFoto.photos[0], photoCategories.ultimaFoto.message, slideIndex);
+    photos = getPhotos('ultimaFoto');
+    addPhotosToGlobal(photos);
+    html += createSingleSlide(photos[0], getMessage('ultimaFoto'), slideIndex);
     slideIndex++;
 
     // Slide del versículo
