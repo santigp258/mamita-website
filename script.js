@@ -128,11 +128,7 @@ function initializeApp() {
         // Detección móvil
         isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
-        // Generar slides
-        totalSlides = generateSlides();
-        slides = document.querySelectorAll('.slide');
-
-        // Obtener elementos del DOM
+        // Obtener elementos del DOM primero
         floatingContainer = document.getElementById('floatingElements');
         progressBar = document.getElementById('progressBar');
         progressFill = document.getElementById('progressFill');
@@ -153,21 +149,32 @@ function initializeApp() {
         lightboxCounter = document.getElementById('lightboxCounter');
         slidesContainer = document.getElementById('slidesContainer');
 
-        if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
+        // Generar slides de forma diferida para no bloquear
+        setTimeout(function() {
+            totalSlides = generateSlides();
+            slides = document.querySelectorAll('.slide');
 
-        // Mostrar primer slide
-        if (slides && slides.length > 0) {
-            slides[0].classList.add('active');
-        }
+            if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
 
-        // Configurar event listeners
-        setupEventListeners();
+            // Mostrar primer slide
+            if (slides && slides.length > 0) {
+                slides[0].classList.add('active');
+            }
 
-        // Iniciar elementos flotantes
-        startFloatingElements();
+            // Configurar event listeners
+            setupEventListeners();
 
-        // Iniciar slideshow
-        startSlideshow();
+            // Iniciar elementos flotantes (diferido)
+            setTimeout(function() {
+                startFloatingElements();
+            }, 500);
+
+            // Iniciar slideshow (diferido)
+            setTimeout(function() {
+                startSlideshow();
+            }, 100);
+
+        }, 50);
 
     } catch (e) {
         console.error('Error en inicialización:', e);
@@ -180,20 +187,7 @@ function generateSlides() {
     if (!container) return 0;
 
     var slideIndex = 0;
-    var html = '';
-
-    html += '<div class="slide intro-slide" data-slide="' + slideIndex + '" data-type="intro">' +
-            '<div class="intro-dove">🕊️</div>' +
-            '<div class="intro-memorial-text">En Amorosa Memoria</div>' +
-            '<div class="intro-name">Ana del Carmen Pulgarín</div>' +
-            '<div class="intro-dates">' +
-                '<span>2 de Agosto, 1956</span>' +
-                '<span class="heart">♡</span>' +
-                '<span>28 de Enero, 2026</span>' +
-            '</div>' +
-            '<div class="decorative-flowers">✿ ❀ ✿</div>' +
-        '</div>';
-    slideIndex++;
+    var h = []; // Array para construir HTML
 
     function addPhotosToGlobal(photos) {
         for (var i = 0; i < photos.length; i++) {
@@ -203,149 +197,124 @@ function generateSlides() {
         }
     }
 
-    var photos = getPhotos('cumpleanos50');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('cumpleanos50'), slideIndex, 'grid-6');
+    // Intro
+    h.push('<div class="slide intro-slide" data-slide="' + slideIndex + '" data-type="intro">');
+    h.push('<div class="intro-dove">🕊️</div>');
+    h.push('<div class="intro-memorial-text">En Amorosa Memoria</div>');
+    h.push('<div class="intro-name">Ana del Carmen Pulgarín</div>');
+    h.push('<div class="intro-dates"><span>2 de Agosto, 1956</span><span class="heart">♡</span><span>28 de Enero, 2026</span></div>');
+    h.push('<div class="decorative-flowers">✿ ❀ ✿</div>');
+    h.push('</div>');
     slideIndex++;
 
-    photos = getPhotos('momentosFamilia');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('momentosFamilia'), slideIndex, 'grid-4');
-    slideIndex++;
+    // Fotos
+    var categories = [
+        ['cumpleanos50', 'grid-6'],
+        ['momentosFamilia', 'grid-4'],
+        ['vidaCotidiana', 'grid-3']
+    ];
 
-    photos = getPhotos('vidaCotidiana');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('vidaCotidiana'), slideIndex, 'grid-3');
-    slideIndex++;
+    for (var c = 0; c < categories.length; c++) {
+        var cat = categories[c][0];
+        var grid = categories[c][1];
+        var photos = getPhotos(cat);
+        addPhotosToGlobal(photos);
+        h.push(createGridSlide(photos, getMessage(cat), slideIndex, grid));
+        slideIndex++;
+    }
 
+    // Día de las Madres (dividido en 2)
     var diaMadresAll = getPhotos('diaMadres');
     var diaMadresFirst = diaMadresAll.slice(0, 6);
     var diaMadresSecond = diaMadresAll.slice(6);
-
     addPhotosToGlobal(diaMadresFirst);
-    html += createGridSlide(diaMadresFirst, "Día de las Madres - Tu sonrisa lo iluminaba todo", slideIndex, 'grid-6');
+    h.push(createGridSlide(diaMadresFirst, "Día de las Madres - Tu sonrisa lo iluminaba todo", slideIndex, 'grid-6'));
     slideIndex++;
-
     addPhotosToGlobal(diaMadresSecond);
-    html += createGridSlide(diaMadresSecond, getMessage('diaMadres'), slideIndex, 'grid-6');
+    h.push(createGridSlide(diaMadresSecond, getMessage('diaMadres'), slideIndex, 'grid-6'));
     slideIndex++;
 
-    html += '<div class="slide message-slide" data-slide="' + slideIndex + '" data-type="message">' +
-            '<div class="message-flower">🌸</div>' +
-            '<div class="message-content">' +
-                '<p class="message-line">En tu corazón siempre hubo amor y respeto<br>por tu familia y amigos.</p>' +
-                '<p class="message-line">Gracias por tus enseñanzas, por acercarnos a Dios<br>y por tu amor incondicional.</p>' +
-                '<div class="message-signature">Te amamos, madre querida,<br>mamita de nuestro corazón</div>' +
-            '</div>' +
-        '</div>';
+    // Mensaje
+    h.push('<div class="slide message-slide" data-slide="' + slideIndex + '" data-type="message">');
+    h.push('<div class="message-flower">🌸</div>');
+    h.push('<div class="message-content">');
+    h.push('<p class="message-line">En tu corazón siempre hubo amor y respeto<br>por tu familia y amigos.</p>');
+    h.push('<p class="message-line">Gracias por tus enseñanzas, por acercarnos a Dios<br>y por tu amor incondicional.</p>');
+    h.push('<div class="message-signature">Te amamos, madre querida,<br>mamita de nuestro corazón</div>');
+    h.push('</div></div>');
     slideIndex++;
 
-    photos = getPhotos('momentosTranquilos');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('momentosTranquilos'), slideIndex, 'grid-4');
-    slideIndex++;
-
-    photos = getPhotos('cumpleanosHija');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('cumpleanosHija'), slideIndex, 'grid-2');
-    slideIndex++;
-
-    photos = getPhotos('besosHijosNietos');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('besosHijosNietos'), slideIndex, 'grid-3');
-    slideIndex++;
-
-    photos = getPhotos('momentosPaz');
-    addPhotosToGlobal(photos);
-    html += createSingleSlide(photos[0], getMessage('momentosPaz'), slideIndex);
-    slideIndex++;
-
-    photos = getPhotos('celebraciones');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('celebraciones'), slideIndex, 'grid-3');
-    slideIndex++;
-
-    photos = getPhotos('reunionesFamiliares');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('reunionesFamiliares'), slideIndex, 'grid-4');
-    slideIndex++;
-
-    photos = getPhotos('familiaCompleta');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('familiaCompleta'), slideIndex, 'grid-2');
-    slideIndex++;
-
-    photos = getPhotos('conNieto');
-    addPhotosToGlobal(photos);
-    html += createSingleSlide(photos[0], getMessage('conNieto'), slideIndex);
-    slideIndex++;
-
-    photos = getPhotos('selfieFamiliar');
-    addPhotosToGlobal(photos);
-    html += createSingleSlide(photos[0], getMessage('selfieFamiliar'), slideIndex);
-    slideIndex++;
-
-    photos = getPhotos('quinceanos');
-    addPhotosToGlobal(photos);
-    html += createSingleSlide(photos[0], getMessage('quinceanos'), slideIndex);
-    slideIndex++;
-
-    photos = getPhotos('generaciones');
-    addPhotosToGlobal(photos);
-    html += createGridSlide(photos, getMessage('generaciones'), slideIndex, 'grid-2');
-    slideIndex++;
-
-    photos = getPhotos('ultimaFoto');
-    addPhotosToGlobal(photos);
-    html += createSingleSlide(photos[0], getMessage('ultimaFoto'), slideIndex);
-    slideIndex++;
-
-    html += '<div class="slide verse-slide" data-slide="' + slideIndex + '" data-type="verse">' +
-            '<div class="verse-container">' +
-                '<div class="verse-icon">✝</div>' +
-                '<p class="verse-text">"Estimada es a Jehová<br>la muerte de sus santos."</p>' +
-                '<p class="verse-reference">— Salmos 116:15</p>' +
-            '</div>' +
-        '</div>';
-    slideIndex++;
-
-    var mainPhoto = asset("main_photo.jpg");
-    html += '<div class="slide final-slide" data-slide="' + slideIndex + '" data-type="final">' +
-            '<div class="final-portrait">' +
-                '<div class="portrait-glow"></div>' +
-                '<div class="portrait-frame">' +
-                    '<img src="' + mainPhoto + '" alt="Ana del Carmen Pulgarín">' +
-                '</div>' +
-            '</div>' +
-            '<div class="final-eternal">Por siempre en nuestros corazones</div>' +
-            '<div class="final-name">Ana del Carmen Pulgarín</div>' +
-            '<div class="final-dates">1956 ♡ 2026</div>' +
-            '<div class="final-flowers">🌹</div>' +
-        '</div>';
-    slideIndex++;
-
-    var galleryPhotosHtml = '';
-    for (var i = 0; i < allPhotos.length; i++) {
-        galleryPhotosHtml += '<div class="gallery-thumb" data-photo-src="' + allPhotos[i] + '" data-photo-index="' + i + '">' +
-            '<img data-src="' + allPhotos[i] + '" alt="Recuerdo ' + (i + 1) + '" loading="lazy">' +
-        '</div>';
+    // Más categorías
+    var categories2 = [
+        ['momentosTranquilos', 'grid-4'],
+        ['cumpleanosHija', 'grid-2'],
+        ['besosHijosNietos', 'grid-3']
+    ];
+    for (var c2 = 0; c2 < categories2.length; c2++) {
+        var cat2 = categories2[c2][0];
+        var grid2 = categories2[c2][1];
+        var photos2 = getPhotos(cat2);
+        addPhotosToGlobal(photos2);
+        h.push(createGridSlide(photos2, getMessage(cat2), slideIndex, grid2));
+        slideIndex++;
     }
 
-    html += '<div class="slide gallery-slide" data-slide="' + slideIndex + '" data-type="gallery">' +
-            '<div class="gallery-header">' +
-                '<div class="gallery-icon">📷</div>' +
-                '<div class="gallery-title">Galería de Recuerdos</div>' +
-                '<div class="gallery-subtitle">' + allPhotos.length + ' momentos especiales</div>' +
-            '</div>' +
-            '<div class="gallery-thumbs-container">' +
-                '<div class="gallery-thumbs" id="galleryThumbs">' +
-                    galleryPhotosHtml +
-                '</div>' +
-            '</div>' +
-            '<div class="gallery-hint">Toca cualquier foto para verla en grande</div>' +
-        '</div>';
+    // Singles
+    var singles = ['momentosPaz', 'celebraciones', 'reunionesFamiliares', 'familiaCompleta', 'conNieto', 'selfieFamiliar', 'quinceanos', 'generaciones', 'ultimaFoto'];
+    var singleGrids = ['single', 'grid-3', 'grid-4', 'grid-2', 'single', 'single', 'single', 'grid-2', 'single'];
 
-    container.innerHTML = html;
+    for (var s = 0; s < singles.length; s++) {
+        var sCat = singles[s];
+        var sGrid = singleGrids[s];
+        var sPhotos = getPhotos(sCat);
+        addPhotosToGlobal(sPhotos);
+        if (sGrid === 'single') {
+            h.push(createSingleSlide(sPhotos[0], getMessage(sCat), slideIndex));
+        } else {
+            h.push(createGridSlide(sPhotos, getMessage(sCat), slideIndex, sGrid));
+        }
+        slideIndex++;
+    }
+
+    // Versículo
+    h.push('<div class="slide verse-slide" data-slide="' + slideIndex + '" data-type="verse">');
+    h.push('<div class="verse-container">');
+    h.push('<div class="verse-icon">✝</div>');
+    h.push('<p class="verse-text">"Estimada es a Jehová<br>la muerte de sus santos."</p>');
+    h.push('<p class="verse-reference">— Salmos 116:15</p>');
+    h.push('</div></div>');
+    slideIndex++;
+
+    // Final
+    var mainPhoto = asset("main_photo.jpg");
+    h.push('<div class="slide final-slide" data-slide="' + slideIndex + '" data-type="final">');
+    h.push('<div class="final-portrait"><div class="portrait-glow"></div>');
+    h.push('<div class="portrait-frame"><img src="' + mainPhoto + '" alt="Ana del Carmen Pulgarín"></div></div>');
+    h.push('<div class="final-eternal">Por siempre en nuestros corazones</div>');
+    h.push('<div class="final-name">Ana del Carmen Pulgarín</div>');
+    h.push('<div class="final-dates">1956 ♡ 2026</div>');
+    h.push('<div class="final-flowers">🌹</div>');
+    h.push('</div>');
+    slideIndex++;
+
+    // Galería (sin imágenes src para no cargar todo)
+    h.push('<div class="slide gallery-slide" data-slide="' + slideIndex + '" data-type="gallery">');
+    h.push('<div class="gallery-header">');
+    h.push('<div class="gallery-icon">📷</div>');
+    h.push('<div class="gallery-title">Galería de Recuerdos</div>');
+    h.push('<div class="gallery-subtitle">' + allPhotos.length + ' momentos especiales</div>');
+    h.push('</div>');
+    h.push('<div class="gallery-thumbs-container"><div class="gallery-thumbs" id="galleryThumbs">');
+    for (var g = 0; g < allPhotos.length; g++) {
+        h.push('<div class="gallery-thumb" data-photo-src="' + allPhotos[g] + '" data-photo-index="' + g + '">');
+        h.push('<img data-src="' + allPhotos[g] + '" alt="Recuerdo ' + (g + 1) + '" loading="lazy">');
+        h.push('</div>');
+    }
+    h.push('</div></div>');
+    h.push('<div class="gallery-hint">Toca cualquier foto para verla en grande</div>');
+    h.push('</div>');
+
+    container.innerHTML = h.join('');
     return slideIndex + 1;
 }
 
@@ -752,10 +721,20 @@ function startSlideshow() {
         audioTimeOnPause = 0;
     }
 
+    // Manejar audio de forma segura
     if (bgMusic) {
-        bgMusic.currentTime = audioTimeOnPause;
-        bgMusic.volume = 1;
-        bgMusic.play().catch(function(e) { console.log('Audio:', e); });
+        try {
+            bgMusic.currentTime = audioTimeOnPause;
+            bgMusic.volume = 1;
+            var playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(function(e) {
+                    console.log('Audio no pudo reproducirse:', e);
+                });
+            }
+        } catch (e) {
+            console.log('Error con audio:', e);
+        }
     }
 
     showSlide(currentSlide);
