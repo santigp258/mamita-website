@@ -404,6 +404,8 @@ function createAutoplayOverlay() {
         overlay.classList.add('hidden');
         setTimeout(() => {
             overlay.remove();
+            // Iniciar elementos flotantes solo después de interacción
+            startFloatingElements();
             startSlideshow();
         }, 800);
     });
@@ -497,34 +499,50 @@ function createBokeh() {
     animate();
 }
 
-// Intervalos más largos en móvil para ahorrar recursos
-setInterval(createPetal, isMobile ? 5000 : 2500);
-setInterval(createBokeh, isMobile ? 2000 : 800);
+// Variables para los intervalos (se inician después de interacción del usuario)
+let petalInterval = null;
+let bokehInterval = null;
+
+function startFloatingElements() {
+    if (petalInterval || bokehInterval) return; // Ya iniciados
+
+    // Intervalos más largos en móvil para ahorrar recursos
+    petalInterval = setInterval(createPetal, isMobile ? 5000 : 2500);
+    bokehInterval = setInterval(createBokeh, isMobile ? 2000 : 800);
+}
 
 // ==================== SLIDESHOW ====================
-const totalSlides = generateSlides();
-const slides = document.querySelectorAll('.slide');
-const progressBar = document.getElementById('progressBar');
-const progressFill = document.getElementById('progressFill');
-const progressTooltip = document.getElementById('progressTooltip');
-const currentSlideEl = document.getElementById('currentSlide');
-const totalSlidesEl = document.getElementById('totalSlides');
-const playBtn = document.getElementById('playBtn');
-const hideBtn = document.getElementById('hideBtn');
-const controlsPanel = document.getElementById('controlsPanel');
-const showControlsBtn = document.getElementById('showControlsBtn');
-const bgMusic = document.getElementById('bgMusic');
-const muteBtn = document.getElementById('muteBtn');
+let totalSlides, slides, progressBar, progressFill, progressTooltip;
+let currentSlideEl, totalSlidesEl, playBtn, hideBtn, controlsPanel, showControlsBtn;
+let bgMusic, muteBtn, lightbox, lightboxImg, lightboxClose, lightboxPrev, lightboxNext, lightboxCounter;
 
-// Lightbox elements
-const lightbox = document.getElementById('lightbox');
-const lightboxImg = document.getElementById('lightboxImg');
-const lightboxClose = document.getElementById('lightboxClose');
-const lightboxPrev = document.getElementById('lightboxPrev');
-const lightboxNext = document.getElementById('lightboxNext');
-const lightboxCounter = document.getElementById('lightboxCounter');
+try {
+    totalSlides = generateSlides();
+    slides = document.querySelectorAll('.slide');
+    progressBar = document.getElementById('progressBar');
+    progressFill = document.getElementById('progressFill');
+    progressTooltip = document.getElementById('progressTooltip');
+    currentSlideEl = document.getElementById('currentSlide');
+    totalSlidesEl = document.getElementById('totalSlides');
+    playBtn = document.getElementById('playBtn');
+    hideBtn = document.getElementById('hideBtn');
+    controlsPanel = document.getElementById('controlsPanel');
+    showControlsBtn = document.getElementById('showControlsBtn');
+    bgMusic = document.getElementById('bgMusic');
+    muteBtn = document.getElementById('muteBtn');
 
-totalSlidesEl.textContent = totalSlides;
+    // Lightbox elements
+    lightbox = document.getElementById('lightbox');
+    lightboxImg = document.getElementById('lightboxImg');
+    lightboxClose = document.getElementById('lightboxClose');
+    lightboxPrev = document.getElementById('lightboxPrev');
+    lightboxNext = document.getElementById('lightboxNext');
+    lightboxCounter = document.getElementById('lightboxCounter');
+
+    if (totalSlidesEl) totalSlidesEl.textContent = totalSlides;
+} catch (e) {
+    console.error('Error inicializando slideshow:', e);
+}
 
 let currentSlide = 0;
 let isPlaying = false;
