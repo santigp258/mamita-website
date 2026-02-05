@@ -840,9 +840,5 @@ function init() {
     }
 }
 
-// Ejecutar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// Ejecutar SOLO cuando el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', init);
