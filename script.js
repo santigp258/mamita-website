@@ -1,3 +1,15 @@
+// ==================== ERROR HANDLER GLOBAL ====================
+// Prevenir que errores no manejados causen recargas en móvil
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Error:', msg, 'at', url, lineNo);
+    return true; // Prevenir comportamiento por defecto
+};
+
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Promise rejection:', event.reason);
+    event.preventDefault();
+});
+
 // ==================== CONFIGURACIÓN ====================
 // CDN de Cloudinary
 const CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
@@ -151,7 +163,7 @@ const photoCategories = {
     // Última foto especial
     ultimaFoto: {
         photos: [
-            asset("ultima.jpg")
+            asset("ultima.jpeg")
         ],
         message: "Hasta siempre, mamita querida"
     }
@@ -931,44 +943,67 @@ function loadGalleryImages() {
         const loadNext = () => {
             if (index < images.length) {
                 const img = images[index];
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
+                if (img && img.dataset && img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                }
                 index++;
                 // Cargar siguiente imagen después de un pequeño delay
-                setTimeout(loadNext, 50);
+                setTimeout(loadNext, 100);
             }
         };
         loadNext();
     } else {
         // En desktop, cargar todas
         images.forEach(img => {
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
+            if (img && img.dataset && img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            }
         });
     }
 }
 
-// Observar cuando el slide de galería se vuelve visible
-const galleryObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            loadGalleryImages();
-            galleryObserver.disconnect();
-        }
-    });
-}, { threshold: 0.1 });
+// Observar cuando el slide de galería se vuelve visible - con fallback para navegadores antiguos
+try {
+    if ('IntersectionObserver' in window) {
+        const galleryObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    loadGalleryImages();
+                    galleryObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.1 });
 
-// Observar el slide de galería
-const gallerySlide = document.querySelector('.gallery-slide');
-if (gallerySlide) {
-    galleryObserver.observe(gallerySlide);
+        // Observar el slide de galería
+        const gallerySlide = document.querySelector('.gallery-slide');
+        if (gallerySlide) {
+            galleryObserver.observe(gallerySlide);
+        }
+    }
+} catch (e) {
+    console.log('IntersectionObserver no disponible');
 }
 
 // ==================== INICIALIZACIÓN ====================
-// Mostrar primer slide (con verificación)
-if (slides && slides.length > 0) {
-    slides[0].classList.add('active');
+function init() {
+    try {
+        // Mostrar primer slide (con verificación)
+        if (slides && slides.length > 0) {
+            slides[0].classList.add('active');
+        }
+
+        // Crear overlay de autoplay
+        createAutoplayOverlay();
+    } catch (e) {
+        console.error('Error en inicialización:', e);
+    }
 }
 
-// Crear overlay de autoplay
-createAutoplayOverlay();
+// Ejecutar inicialización
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
