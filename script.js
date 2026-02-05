@@ -582,24 +582,24 @@ function startFloatingElements() {
 
 // ==================== SLIDE FUNCTIONS ====================
 function getSlideDuration(slideEl) {
-    if (!slideEl || !slideEl.dataset) return 12000;
+    if (!slideEl || !slideEl.dataset) return 6000;
     var type = slideEl.dataset.type;
     switch(type) {
-        case 'intro': return 10000;
-        case 'message': return 20000;
-        case 'verse': return 18000;
-        case 'final': return 25000;
-        case 'gallery': return 30000;
-        case 'single': return 12000;
+        case 'intro': return 5000;      // 10s -> 5s
+        case 'message': return 10000;   // 20s -> 10s
+        case 'verse': return 9000;      // 18s -> 9s
+        case 'final': return 12000;     // 25s -> 12s
+        case 'gallery': return 15000;   // 30s -> 15s
+        case 'single': return 6000;     // 12s -> 6s
         case 'grid':
             var grid = slideEl.querySelector('.photo-grid');
             var gridClass = grid ? grid.className : '';
-            if (gridClass.indexOf('grid-6') !== -1) return 18000;
-            if (gridClass.indexOf('grid-4') !== -1) return 15000;
-            if (gridClass.indexOf('grid-3') !== -1) return 14000;
-            if (gridClass.indexOf('grid-2') !== -1) return 12000;
-            return 12000;
-        default: return 12000;
+            if (gridClass.indexOf('grid-6') !== -1) return 9000;   // 18s -> 9s
+            if (gridClass.indexOf('grid-4') !== -1) return 7500;   // 15s -> 7.5s
+            if (gridClass.indexOf('grid-3') !== -1) return 7000;   // 14s -> 7s
+            if (gridClass.indexOf('grid-2') !== -1) return 6000;   // 12s -> 6s
+            return 6000;
+        default: return 6000;
     }
 }
 
