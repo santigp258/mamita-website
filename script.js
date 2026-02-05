@@ -580,19 +580,24 @@ function clearAllAnimations() {
 }
 
 function showSlide(index) {
+    if (!slides || !slides.length) return;
+
     slides.forEach(s => s.classList.remove('active'));
     clearAllAnimations();
 
-    slides[index].classList.add('active');
-    currentSlideEl.textContent = index + 1;
-    progressFill.style.width = ((index + 1) / totalSlides * 100) + '%';
+    if (slides[index]) {
+        slides[index].classList.add('active');
+    }
+    if (currentSlideEl) currentSlideEl.textContent = index + 1;
+    if (progressFill) progressFill.style.width = ((index + 1) / totalSlides * 100) + '%';
 
     setTimeout(() => animateSlide(index), 100);
 }
 
 function animateSlide(index) {
+    if (!slides || !slides[index]) return;
     const slide = slides[index];
-    const type = slide.dataset.type;
+    const type = slide.dataset?.type;
 
     if (type === 'intro') {
         setTimeout(() => slide.querySelector('.intro-dove')?.classList.add('show'), 100);
@@ -639,19 +644,25 @@ function animateSlide(index) {
 }
 
 function nextSlide() {
+    if (!slides || !slides.length) return;
+
     if (currentSlide < totalSlides - 1) {
         currentSlide++;
         showSlide(currentSlide);
-        slideTimer = setTimeout(nextSlide, getSlideDuration(slides[currentSlide]));
+        if (slides[currentSlide]) {
+            slideTimer = setTimeout(nextSlide, getSlideDuration(slides[currentSlide]));
+        }
     } else {
         isPlaying = false;
-        playBtn.textContent = '↺ REINICIAR';
+        if (playBtn) playBtn.textContent = '↺ REINICIAR';
     }
 }
 
 function startSlideshow() {
+    if (!slides || !slides.length) return;
+
     isPlaying = true;
-    playBtn.textContent = '⏸ PAUSAR';
+    if (playBtn) playBtn.textContent = '⏸ PAUSAR';
 
     // Si es reinicio, comenzar desde 0
     if (currentSlide === totalSlides - 1) {
@@ -660,48 +671,58 @@ function startSlideshow() {
     }
 
     // Sincronizar audio - continuar desde donde se pausó
-    bgMusic.currentTime = audioTimeOnPause;
-    bgMusic.volume = 1;
-    bgMusic.play().catch(e => console.log('Audio:', e));
+    if (bgMusic) {
+        bgMusic.currentTime = audioTimeOnPause;
+        bgMusic.volume = 1;
+        bgMusic.play().catch(e => console.log('Audio:', e));
+    }
 
     showSlide(currentSlide);
-    slideTimer = setTimeout(nextSlide, getSlideDuration(slides[currentSlide]));
+    if (slides[currentSlide]) {
+        slideTimer = setTimeout(nextSlide, getSlideDuration(slides[currentSlide]));
+    }
 }
 
 function pauseSlideshow() {
     isPlaying = false;
-    playBtn.textContent = '▶ CONTINUAR';
+    if (playBtn) playBtn.textContent = '▶ CONTINUAR';
     clearTimeout(slideTimer);
 
     // Guardar posición del audio para sincronización
-    audioTimeOnPause = bgMusic.currentTime;
-    bgMusic.pause();
+    if (bgMusic) {
+        audioTimeOnPause = bgMusic.currentTime;
+        bgMusic.pause();
+    }
 }
 
 // ==================== PROGRESS BAR INTERACTIVO ====================
-progressBar.addEventListener('click', (e) => {
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const targetSlide = Math.floor(percent * totalSlides);
+if (progressBar) {
+    progressBar.addEventListener('click', (e) => {
+        const rect = progressBar.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const targetSlide = Math.floor(percent * totalSlides);
 
-    // Pausar si está reproduciendo
-    if (isPlaying) {
-        pauseSlideshow();
-    }
+        // Pausar si está reproduciendo
+        if (isPlaying) {
+            pauseSlideshow();
+        }
 
-    // Navegar al slide
-    currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
-    showSlide(currentSlide);
-});
+        // Navegar al slide
+        currentSlide = Math.max(0, Math.min(targetSlide, totalSlides - 1));
+        showSlide(currentSlide);
+    });
 
-progressBar.addEventListener('mousemove', (e) => {
-    const rect = progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const targetSlide = Math.floor(percent * totalSlides) + 1;
+    progressBar.addEventListener('mousemove', (e) => {
+        const rect = progressBar.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const targetSlide = Math.floor(percent * totalSlides) + 1;
 
-    progressTooltip.textContent = `Slide ${Math.max(1, Math.min(targetSlide, totalSlides))}`;
-    progressTooltip.style.left = `${percent * 100}%`;
-});
+        if (progressTooltip) {
+            progressTooltip.textContent = `Slide ${Math.max(1, Math.min(targetSlide, totalSlides))}`;
+            progressTooltip.style.left = `${percent * 100}%`;
+        }
+    });
+}
 
 // ==================== LIGHTBOX ====================
 function openLightbox(photoSrc) {
@@ -755,23 +776,27 @@ function lightboxNextPhoto() {
 }
 
 // Lightbox event listeners
-lightboxClose.addEventListener('click', closeLightbox);
-lightboxPrev.addEventListener('click', lightboxPrevPhoto);
-lightboxNext.addEventListener('click', lightboxNextPhoto);
+if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+if (lightboxPrev) lightboxPrev.addEventListener('click', lightboxPrevPhoto);
+if (lightboxNext) lightboxNext.addEventListener('click', lightboxNextPhoto);
 
-lightbox.addEventListener('click', (e) => {
-    // Cerrar solo si se hace click en el fondo oscuro
-    if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
-        closeLightbox();
-    }
-});
+if (lightbox) {
+    lightbox.addEventListener('click', (e) => {
+        // Cerrar solo si se hace click en el fondo oscuro
+        if (e.target === lightbox || e.target.classList.contains('lightbox-content')) {
+            closeLightbox();
+        }
+    });
+}
 
 // Click en fotos para abrir lightbox - usar event delegation en el container
-document.getElementById('slidesContainer').addEventListener('click', function(e) {
-    // Verificar si el lightbox ya está abierto
-    if (lightbox.classList.contains('active')) {
-        return;
-    }
+const slidesContainer = document.getElementById('slidesContainer');
+if (slidesContainer) {
+    slidesContainer.addEventListener('click', function(e) {
+        // Verificar si el lightbox ya está abierto
+        if (lightbox && lightbox.classList.contains('active')) {
+            return;
+        }
 
     // Buscar si el click fue en una foto o dentro de una foto
     const gridPhoto = e.target.closest('.grid-photo');
@@ -800,30 +825,37 @@ document.getElementById('slidesContainer').addEventListener('click', function(e)
             openLightbox(src);
         }
     }
-});
+    });
+}
 
 // ==================== CONTROLES ====================
-playBtn.onclick = () => isPlaying ? pauseSlideshow() : startSlideshow();
+if (playBtn) playBtn.onclick = () => isPlaying ? pauseSlideshow() : startSlideshow();
 
-hideBtn.onclick = () => {
-    controlsPanel.classList.add('hidden');
-    showControlsBtn.classList.add('visible');
-};
+if (hideBtn) {
+    hideBtn.onclick = () => {
+        if (controlsPanel) controlsPanel.classList.add('hidden');
+        if (showControlsBtn) showControlsBtn.classList.add('visible');
+    };
+}
 
-showControlsBtn.onclick = () => {
-    controlsPanel.classList.remove('hidden');
-    showControlsBtn.classList.remove('visible');
-};
+if (showControlsBtn) {
+    showControlsBtn.onclick = () => {
+        if (controlsPanel) controlsPanel.classList.remove('hidden');
+        showControlsBtn.classList.remove('visible');
+    };
+}
 
-muteBtn.onclick = () => {
-    bgMusic.muted = !bgMusic.muted;
-    muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
-};
+if (muteBtn && bgMusic) {
+    muteBtn.onclick = () => {
+        bgMusic.muted = !bgMusic.muted;
+        muteBtn.textContent = bgMusic.muted ? '🔇' : '🔊';
+    };
+}
 
 // ==================== KEYBOARD CONTROLS ====================
 document.onkeydown = (e) => {
     // Si el lightbox está abierto
-    if (lightbox.classList.contains('active')) {
+    if (lightbox && lightbox.classList.contains('active')) {
         if (e.code === 'Escape') closeLightbox();
         if (e.code === 'ArrowLeft') lightboxPrevPhoto();
         if (e.code === 'ArrowRight') lightboxNextPhoto();
@@ -845,39 +877,41 @@ document.onkeydown = (e) => {
         showSlide(currentSlide);
     }
     if (e.code === 'KeyH') {
-        controlsPanel.classList.toggle('hidden');
-        showControlsBtn.classList.toggle('visible');
+        if (controlsPanel) controlsPanel.classList.toggle('hidden');
+        if (showControlsBtn) showControlsBtn.classList.toggle('visible');
     }
     if (e.code === 'KeyF') {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else {
-            document.documentElement.requestFullscreen();
+            document.documentElement.requestFullscreen().catch(() => {});
         }
     }
     if (e.code === 'Escape') {
-        if (controlsPanel.classList.contains('hidden')) {
+        if (controlsPanel && controlsPanel.classList.contains('hidden')) {
             controlsPanel.classList.remove('hidden');
-            showControlsBtn.classList.remove('visible');
+            if (showControlsBtn) showControlsBtn.classList.remove('visible');
         }
     }
 };
 
 // ==================== AUDIO ====================
-bgMusic.ontimeupdate = () => {
-    // Fade out music near end
-    if (bgMusic.duration - bgMusic.currentTime < 5) {
-        bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
-    }
-};
+if (bgMusic) {
+    bgMusic.ontimeupdate = () => {
+        // Fade out music near end
+        if (bgMusic.duration - bgMusic.currentTime < 5) {
+            bgMusic.volume = Math.max(0, (bgMusic.duration - bgMusic.currentTime) / 5);
+        }
+    };
 
-// Loop audio si termina antes que el slideshow
-bgMusic.onended = () => {
-    if (isPlaying) {
-        bgMusic.currentTime = 0;
-        bgMusic.play();
-    }
-};
+    // Loop audio si termina antes que el slideshow
+    bgMusic.onended = () => {
+        if (isPlaying) {
+            bgMusic.currentTime = 0;
+            bgMusic.play();
+        }
+    };
+}
 
 // ==================== LAZY LOADING GALERÍA ====================
 let galleryLoaded = false;
@@ -931,8 +965,10 @@ if (gallerySlide) {
 }
 
 // ==================== INICIALIZACIÓN ====================
-// Mostrar primer slide
-slides[0].classList.add('active');
+// Mostrar primer slide (con verificación)
+if (slides && slides.length > 0) {
+    slides[0].classList.add('active');
+}
 
 // Crear overlay de autoplay
 createAutoplayOverlay();
