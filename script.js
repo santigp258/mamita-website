@@ -1,7 +1,6 @@
 // ==================== CONFIGURACIÓN ====================
-// Cambia esta URL a tu CDN cuando subas las imágenes
-// Ejemplo: const CDN_BASE = "https://tu-cdn.com/memorial/";
-const CDN_BASE = "";
+// CDN de Cloudinary
+const CDN_BASE = "https://res.cloudinary.com/dus5lm40j/image/upload/v1770259370/mamita/";
 
 // Helper para construir URLs con CDN
 const asset = (path) => CDN_BASE + path;
@@ -13,153 +12,153 @@ const photoCategories = {
     // Celebración cumpleaños 50 de su hija - Fotos grupales con familia
     cumpleanos50: {
         photos: [
-            "assets/slideshow/foto_01.jpeg",
-            "assets/slideshow/foto_02.jpeg",
-            "assets/slideshow/foto_03.jpeg",
-            "assets/slideshow/foto_04.jpeg",
-            "assets/slideshow/foto_05.jpeg",
-            "assets/slideshow/foto_06.jpeg"
+            asset("foto_01.jpg"),
+            asset("foto_02.jpg"),
+            asset("foto_03.jpg"),
+            asset("foto_04.jpg"),
+            asset("foto_05.jpg"),
+            asset("foto_06.jpg")
         ],
         message: "Siempre celebrando a tus hijos, nietos y toda tu familia"
     },
     // Comiendo en familia
     momentosFamilia: {
         photos: [
-            "assets/slideshow/foto_07.jpeg",
-            "assets/slideshow/foto_08.jpeg",
-            "assets/slideshow/foto_12.jpeg",
-            "assets/slideshow/foto_13.jpeg"
+            asset("foto_07.jpg"),
+            asset("foto_08.jpg"),
+            asset("foto_12.jpg"),
+            asset("foto_13.jpg")
         ],
         message: "Los momentos más simples eran los más especiales"
     },
     // En la tienda leyendo
     vidaCotidiana: {
         photos: [
-            "assets/slideshow/foto_09.jpeg",
-            "assets/slideshow/foto_10.jpeg",
-            "assets/slideshow/foto_11.jpeg"
+            asset("foto_09.jpg"),
+            asset("foto_10.jpg"),
+            asset("foto_11.jpg")
         ],
         message: "Trabajadora incansable, siempre atenta a todo"
     },
     // Día de las Madres - secuencia cortando pastel
     diaMadres: {
         photos: [
-            "assets/slideshow/foto_14.jpeg",
-            "assets/slideshow/foto_15.jpeg",
-            "assets/slideshow/foto_16.jpeg",
-            "assets/slideshow/foto_17.jpeg",
-            "assets/slideshow/foto_18.jpeg",
-            "assets/slideshow/foto_19.jpeg",
-            "assets/slideshow/foto_20.jpeg",
-            "assets/slideshow/foto_21.jpeg",
-            "assets/slideshow/foto_22.jpeg",
-            "assets/slideshow/foto_23.jpeg",
-            "assets/slideshow/foto_24.jpeg",
-            "assets/slideshow/foto_25.jpeg"
+            asset("foto_14.jpg"),
+            asset("foto_15.jpg"),
+            asset("foto_16.jpg"),
+            asset("foto_17.jpg"),
+            asset("foto_18.jpg"),
+            asset("foto_19.jpg"),
+            asset("foto_20.jpg"),
+            asset("foto_21.jpg"),
+            asset("foto_22.jpg"),
+            asset("foto_23.jpg"),
+            asset("foto_24.jpg"),
+            asset("foto_25.jpg")
         ],
         message: "Feliz Día de las Madres - Tu alegría era contagiosa"
     },
     // En casa sentada, momentos tranquilos
     momentosTranquilos: {
         photos: [
-            "assets/slideshow/foto_26.jpeg",
-            "assets/slideshow/foto_27.jpeg",
-            "assets/slideshow/foto_28.jpeg",
-            "assets/slideshow/foto_29.jpeg"
+            asset("foto_26.jpg"),
+            asset("foto_27.jpg"),
+            asset("foto_28.jpg"),
+            asset("foto_29.jpg")
         ],
         message: "En tu hogar siempre hubo paz y amor"
     },
     // Cumpleaños con hija - abrazos
     cumpleanosHija: {
         photos: [
-            "assets/slideshow/foto_30.jpeg",
-            "assets/slideshow/foto_31.jpeg"
+            asset("foto_30.jpg"),
+            asset("foto_31.jpg")
         ],
         message: "Tu abrazo era el refugio más seguro"
     },
     // Besos con hija/nieta
     besosHijosNietos: {
         photos: [
-            "assets/slideshow/foto_32.jpeg",
-            "assets/slideshow/foto_33.jpeg",
-            "assets/slideshow/foto_34.jpeg"
+            asset("foto_32.jpg"),
+            asset("foto_33.jpg"),
+            asset("foto_34.jpg")
         ],
         message: "Tus besos y cariño para hijos y nietos, amor eterno"
     },
     // Sentada en sofá rojo - paz
     momentosPaz: {
         photos: [
-            "assets/slideshow/foto_35.jpeg"
+            asset("foto_35.jpg")
         ],
         message: "Tu paz interior reflejaba tu fe inquebrantable"
     },
     // Más cumpleaños/celebraciones
     celebraciones: {
         photos: [
-            "assets/slideshow/foto_36.jpeg",
-            "assets/slideshow/foto_37.jpeg",
-            "assets/slideshow/foto_38.jpeg"
+            asset("foto_36.jpg"),
+            asset("foto_37.jpg"),
+            asset("foto_38.jpg")
         ],
         message: "Cada celebración era una bendición"
     },
     // Reuniones familiares - fotos webp
     reunionesFamiliares: {
         photos: [
-            "assets/slideshow/photo_1.webp",
-            "assets/slideshow/photo_2.webp",
-            "assets/slideshow/photo_4.webp",
-            "assets/slideshow/photo_8.webp"
+            asset("photo_1.jpg"),
+            asset("photo_2.jpg"),
+            asset("photo_4.jpg"),
+            asset("photo_8.jpg")
         ],
         message: "Reunida con toda la familia, el mejor regalo"
     },
     // Familia completa al aire libre
     familiaCompleta: {
         photos: [
-            "assets/slideshow/photo_3.webp",
-            "assets/slideshow/photo_7.webp"
+            asset("photo_3.jpg"),
+            asset("photo_7.jpg")
         ],
         message: "Rodeada de hijos, nietos y toda tu descendencia"
     },
     // Con nieto
     conNieto: {
         photos: [
-            "assets/slideshow/photo_9.webp"
+            asset("photo_9.jpg")
         ],
         message: "El amor de abuela, incondicional y eterno"
     },
     // Selfie familiar - cumpleaños
     selfieFamiliar: {
         photos: [
-            "assets/slideshow/foto_39.jpeg"
+            asset("foto_39.jpg")
         ],
         message: "Toda la familia unida, tu mayor alegría"
     },
     // Quinceaños - recuerdo especial
     quinceanos: {
         photos: [
-            "assets/slideshow/foto_40.jpeg"
+            asset("foto_40.jpg")
         ],
         message: "Presente en cada momento especial de tus nietas"
     },
     // Con hijas, nietas y bisnieta
     generaciones: {
         photos: [
-            "assets/slideshow/foto_41.jpeg",
-            "assets/slideshow/foto_42.jpeg"
+            asset("foto_41.jpg"),
+            asset("foto_42.jpg")
         ],
         message: "Tres generaciones unidas por tu amor"
     },
     // Última foto especial
     ultimaFoto: {
         photos: [
-            "assets/slideshow/ultima.jpeg"
+            asset("ultima.jpg")
         ],
         message: "Hasta siempre, mamita querida"
     }
 };
 
 // Foto principal para el slide final
-const mainPhoto = "assets/slideshow/main_photo.webp";
+const mainPhoto = asset("main_photo.jpg");
 
 // Array global para almacenar todas las fotos del slideshow (para lightbox)
 let allPhotos = [];
