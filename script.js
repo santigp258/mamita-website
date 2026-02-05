@@ -1,3 +1,11 @@
+// ==================== CONFIGURACIÓN ====================
+// Cambia esta URL a tu CDN cuando subas las imágenes
+// Ejemplo: const CDN_BASE = "https://tu-cdn.com/memorial/";
+const CDN_BASE = "";
+
+// Helper para construir URLs con CDN
+const asset = (path) => CDN_BASE + path;
+
 // ==================== CONFIGURACIÓN DE FOTOS ====================
 // Organizado por categorías basadas en el análisis visual
 
@@ -144,7 +152,7 @@ const photoCategories = {
     // Última foto especial
     ultimaFoto: {
         photos: [
-            "photos/ultima.jpeg"
+            "assets/slideshow/ultima.jpeg"
         ],
         message: "Hasta siempre, mamita querida"
     }
@@ -316,10 +324,11 @@ function generateSlides() {
     `;
     slideIndex++;
 
-    // Slide de galería - último slide
+    // Slide de galería - último slide (con lazy loading real)
+    // Usamos data-src en vez de src para evitar cargar todas las imágenes
     let galleryPhotosHtml = allPhotos.map((src, i) => `
         <div class="gallery-thumb" data-photo-src="${src}" data-photo-index="${i}">
-            <img src="${src}" alt="Recuerdo ${i + 1}" loading="lazy">
+            <img data-src="${src}" alt="Recuerdo ${i + 1}" loading="lazy">
         </div>
     `).join('');
 
@@ -331,7 +340,7 @@ function generateSlides() {
                 <div class="gallery-subtitle">${allPhotos.length} momentos especiales</div>
             </div>
             <div class="gallery-thumbs-container">
-                <div class="gallery-thumbs">
+                <div class="gallery-thumbs" id="galleryThumbs">
                     ${galleryPhotosHtml}
                 </div>
             </div>
@@ -401,17 +410,28 @@ function createAutoplayOverlay() {
     });
 }
 
+// ==================== DETECCIÓN MÓVIL ====================
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
 // ==================== FLOATING ELEMENTS ====================
 const floatingContainer = document.getElementById('floatingElements');
 
+// Limitar elementos flotantes para evitar crashes en móvil
+const MAX_PETALS = isMobile ? 3 : 8;
+const MAX_BOKEHS = isMobile ? 5 : 15;
+let petalCount = 0;
+let bokehCount = 0;
+
 function createPetal() {
+    if (petalCount >= MAX_PETALS) return;
+    petalCount++;
+
     const petal = document.createElement('div');
     petal.className = 'petal';
     petal.style.left = Math.random() * 100 + '%';
     petal.style.top = '-5%';
     floatingContainer.appendChild(petal);
 
-    let progress = 0;
     const duration = 18000 + Math.random() * 12000;
     const startX = parseFloat(petal.style.left);
     const amplitude = 40 + Math.random() * 80;
@@ -419,8 +439,12 @@ function createPetal() {
 
     function animate() {
         const elapsed = Date.now() - startTime;
-        progress = elapsed / duration;
-        if (progress >= 1) { petal.remove(); return; }
+        const progress = elapsed / duration;
+        if (progress >= 1) {
+            petal.remove();
+            petalCount--;
+            return;
+        }
 
         const y = -5 + (progress * 115);
         const x = startX + Math.sin(elapsed * 0.001) * amplitude;
@@ -436,6 +460,9 @@ function createPetal() {
 }
 
 function createBokeh() {
+    if (bokehCount >= MAX_BOKEHS) return;
+    bokehCount++;
+
     const bokeh = document.createElement('div');
     bokeh.className = 'bokeh';
     const size = 30 + Math.random() * 60;
@@ -453,7 +480,11 @@ function createBokeh() {
     function animate() {
         const elapsed = Date.now() - startTime;
         const progress = elapsed / duration;
-        if (progress >= 1) { bokeh.remove(); return; }
+        if (progress >= 1) {
+            bokeh.remove();
+            bokehCount--;
+            return;
+        }
 
         const y = 110 - (progress * 130);
         const x = startX + Math.sin(elapsed * 0.0008) * 30;
@@ -467,8 +498,9 @@ function createBokeh() {
     animate();
 }
 
-setInterval(createPetal, 2500);
-setInterval(createBokeh, 800);
+// Intervalos más largos en móvil para ahorrar recursos
+setInterval(createPetal, isMobile ? 5000 : 2500);
+setInterval(createBokeh, isMobile ? 2000 : 800);
 
 // ==================== SLIDESHOW ====================
 const totalSlides = generateSlides();
@@ -829,6 +861,57 @@ bgMusic.onended = () => {
         bgMusic.play();
     }
 };
+
+// ==================== LAZY LOADING GALERÍA ====================
+let galleryLoaded = false;
+
+function loadGalleryImages() {
+    if (galleryLoaded) return;
+    galleryLoaded = true;
+
+    const galleryThumbs = document.getElementById('galleryThumbs');
+    if (!galleryThumbs) return;
+
+    const images = galleryThumbs.querySelectorAll('img[data-src]');
+
+    // En móvil, cargar de forma más gradual
+    if (isMobile) {
+        let index = 0;
+        const loadNext = () => {
+            if (index < images.length) {
+                const img = images[index];
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                index++;
+                // Cargar siguiente imagen después de un pequeño delay
+                setTimeout(loadNext, 50);
+            }
+        };
+        loadNext();
+    } else {
+        // En desktop, cargar todas
+        images.forEach(img => {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+        });
+    }
+}
+
+// Observar cuando el slide de galería se vuelve visible
+const galleryObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            loadGalleryImages();
+            galleryObserver.disconnect();
+        }
+    });
+}, { threshold: 0.1 });
+
+// Observar el slide de galería
+const gallerySlide = document.querySelector('.gallery-slide');
+if (gallerySlide) {
+    galleryObserver.observe(gallerySlide);
+}
 
 // ==================== INICIALIZACIÓN ====================
 // Mostrar primer slide
